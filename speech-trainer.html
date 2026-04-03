@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpeakUp — Filler Word Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="script.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="logo">Speak<span>Up</span></div>
+  <div class="badge">FILLER WORD TRAINER</div>
+</header>
+
+<main id="app">
+
+  <!-- ── IDLE ── -->
+  <div id="screen-idle" class="visible">
+    <div class="hero">
+      <h1>Stop saying <em>"um"</em>.<br>Start speaking clearly.</h1>
+      <p>You'll have 60 seconds. Speak naturally. We'll count every filler word and show you exactly where to improve.</p>
+      <div class="filler-chips">
+        <span class="chip">um</span><span class="chip">uh</span><span class="chip">like</span>
+        <span class="chip">you know</span><span class="chip">basically</span><span class="chip">literally</span>
+        <span class="chip">so</span><span class="chip">right</span><span class="chip">okay</span>
+        <span class="chip">actually</span><span class="chip">kind of</span><span class="chip">sort of</span>
+      </div>
+      <button class="start-btn" onclick="startSession()">▶ START 60 SECONDS</button>
+      <p class="perms-note">Requires microphone access · Camera optional</p>
+    </div>
+  </div>
+
+  <!-- ── ACTIVE ── -->
+  <div id="screen-active">
+    <!-- Timer -->
+    <div class="panel">
+      <div class="panel-label"><div class="dot live"></div> RECORDING</div>
+      <div class="timer-block">
+        <div id="timer-display">1:00</div>
+        <div class="timer-bar-wrap">
+          <div id="timer-bar"></div>
+        </div>
+      </div>
+      <div style="margin-top:1rem;">
+        <div class="panel-label"><div class="dot green"></div> TOTAL FILLERS</div>
+        <div class="total-block">
+          <span class="total-label">COUNT</span>
+          <span id="total-count">0</span>
+        </div>
+      </div>
+      <p id="no-speech-notice">⚠ No speech detected — check microphone permissions</p>
+    </div>
+
+    <!-- Filler breakdown -->
+    <div class="panel">
+      <div class="panel-label">FILLER BREAKDOWN</div>
+      <div class="filler-grid" id="filler-grid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- Camera -->
+    <div class="panel camera-panel">
+      <div class="panel-label"><div class="dot live" id="cam-dot" style="background:var(--muted)"></div> CAMERA</div>
+      <video id="video-preview" autoplay muted playsinline></video>
+      <div class="camera-off-msg" id="cam-off-msg" style="display:none">Camera unavailable or permission denied</div>
+    </div>
+
+    <!-- Transcript -->
+    <div class="panel transcript-panel">
+      <div class="panel-label">LIVE TRANSCRIPT</div>
+      <div id="transcript"><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.8rem;">Waiting for speech…</span></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="ctrl-btn stop" onclick="stopSession()">■ STOP & SEE RESULTS</button>
+      <button class="ctrl-btn secondary" onclick="cancelSession()">✕ Cancel</button>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="screen-results">
+    <div class="results-header anim">
+      <h2>Your Results</h2>
+      <p id="result-subtitle">Here's how you did in your 60-second session.</p>
+    </div>
+
+    <!-- Score cards -->
+    <div class="score-card anim">
+      <div class="stat">
+        <div class="stat-label">Total Fillers</div>
+        <div class="stat-value" id="r-total">0</div>
+        <div class="stat-sub" id="r-total-sub"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Per Minute Rate</div>
+        <div class="stat-value" id="r-rate">0</div>
+        <div class="stat-sub">fillers / minute</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Most Used</div>
+        <div class="stat-value" id="r-top" style="font-size:1.4rem;margin-top:0.5rem;">—</div>
+        <div class="stat-sub" id="r-top-sub"></div>
+      </div>
+    </div>
+
+    <!-- Bar chart + video -->
+    <div class="breakdown anim">
+      <h3>BREAKDOWN BY WORD</h3>
+      <div id="bar-chart"></div>
+    </div>
+
+    <div class="playback-panel anim" id="playback-panel" style="display:none">
+      <video id="playback-video" controls playsinline></video>
+      <div class="playback-label"><div class="dot" style="background:var(--green)"></div> YOUR RECORDING — WATCH YOUR BODY LANGUAGE</div>
+    </div>
+
+    <!-- Tips -->
+    <div class="feedback-panel anim">
+      <h3>COACHING TIPS</h3>
+      <div id="tips-container"></div>
+    </div>
+
+    <!-- Full transcript -->
+    <div class="result-transcript anim">
+      <h3>FULL TRANSCRIPT</h3>
+      <div id="result-transcript-text">No transcript captured.</div>
+    </div>
+
+    <div class="results-actions anim">
+      <button class="retry-btn" onclick="resetToIdle()">↺ Try Again</button>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>
