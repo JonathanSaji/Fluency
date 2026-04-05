@@ -1,7 +1,7 @@
 // ── CONFIG ──
 const FILLER_WORDS = [
-  'um','uh','like','basically','literally','so','right','okay','actually',
-  'you know','kind of','sort of','i mean','you see','well','anyway'
+  'um', 'uh', 'like', 'basically', 'literally', 'so', 'right', 'okay', 'actually',
+  'you know', 'kind of', 'sort of', 'i mean', 'you see', 'well', 'anyway', 'umm', 'uhh'
 ];
 
 const DURATION = 60; // seconds
@@ -31,7 +31,7 @@ function resetFillerCounts() {
 
 // ── SCREEN MANAGEMENT ──
 function showScreen(id) {
-  ['screen-idle','screen-active','screen-results'].forEach(s => {
+  ['screen-idle', 'screen-active', 'screen-results'].forEach(s => {
     document.getElementById(s).classList.remove('visible');
   });
   document.getElementById(id).classList.add('visible');
@@ -44,7 +44,7 @@ function buildFillerGrid() {
   FILLER_WORDS.forEach(w => {
     const div = document.createElement('div');
     div.className = 'filler-item';
-    div.id = `fi-${w.replace(/\s+/g,'_')}`;
+    div.id = `fi-${w.replace(/\s+/g, '_')}`;
     div.innerHTML = `<span class="filler-word">${w}</span><span class="filler-count">0</span>`;
     grid.appendChild(div);
   });
@@ -55,7 +55,7 @@ function bumpFiller(word) {
   fillerCounts[word]++;
   totalFillers++;
   document.getElementById('total-count').textContent = totalFillers;
-  const id = `fi-${word.replace(/\s+/g,'_')}`;
+  const id = `fi-${word.replace(/\s+/g, '_')}`;
   const el = document.getElementById(id);
   if (el) {
     el.querySelector('.filler-count').textContent = fillerCounts[word];
@@ -81,7 +81,7 @@ function updateTimerDisplay() {
   const m = Math.floor(secondsLeft / 60);
   const s = secondsLeft % 60;
   const disp = document.getElementById('timer-display');
-  disp.textContent = `${m}:${String(s).padStart(2,'0')}`;
+  disp.textContent = `${m}:${String(s).padStart(2, '0')}`;
   disp.className = secondsLeft <= 10 ? 'warning' : '';
   const bar = document.getElementById('timer-bar');
   const pct = (secondsLeft / DURATION) * 100;
@@ -102,6 +102,11 @@ function startSpeechRecognition() {
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
+  recognition.maxAlternatives = 1;
+
+  recognition.onend = () => {
+    if (timerInterval) recognition.start(); // restart if session still active
+  };
 
   let interimSpan = null;
 
@@ -163,11 +168,11 @@ function startSpeechRecognition() {
 function countFillers(text) {
   const lower = text.toLowerCase();
   // Check multi-word fillers first
-  const sorted = [...FILLER_WORDS].sort((a,b) => b.length - a.length);
+  const sorted = [...FILLER_WORDS].sort((a, b) => b.length - a.length);
   const tempText = lower;
   let remaining = ' ' + tempText + ' ';
   sorted.forEach(fw => {
-    const re = new RegExp(`\\b${fw.replace(/\s+/g,'\\s+')}\\b`, 'gi');
+    const re = new RegExp(`\\b${fw.replace(/\s+/g, '\\s+')}\\b`, 'gi');
     let m;
     while ((m = re.exec(remaining)) !== null) {
       bumpFiller(fw);
@@ -177,9 +182,9 @@ function countFillers(text) {
 
 function highlightFillers(text) {
   let result = text;
-  const sorted = [...FILLER_WORDS].sort((a,b) => b.length - a.length);
+  const sorted = [...FILLER_WORDS].sort((a, b) => b.length - a.length);
   sorted.forEach(fw => {
-    const re = new RegExp(`\\b(${fw.replace(/\s+/g,'\\s+')})\\b`, 'gi');
+    const re = new RegExp(`\\b(${fw.replace(/\s+/g, '\\s+')})\\b`, 'gi');
     result = result.replace(re, `<span class="filler-highlight">$1</span>`);
   });
   // wrap non-highlighted text in .normal
@@ -201,7 +206,7 @@ async function startCamera() {
     mediaRecorder = new MediaRecorder(videoStream);
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
     mediaRecorder.start();
-  } catch(e) {
+  } catch (e) {
     document.getElementById('video-preview').style.display = 'none';
     document.getElementById('cam-off-msg').style.display = 'flex';
   }
@@ -242,7 +247,7 @@ function stopSession() {
   clearTimeout(noSpeechTimer);
   sessionElapsed = Math.round((Date.now() - sessionStartTime) / 1000) || DURATION;
 
-  if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
+  if (recognition) { try { recognition.stop(); } catch (e) { } recognition = null; }
   stopCamera();
 
   setTimeout(showResults, 400);
@@ -251,7 +256,7 @@ function stopSession() {
 function cancelSession() {
   clearInterval(timerInterval);
   clearTimeout(noSpeechTimer);
-  if (recognition) { try { recognition.stop(); } catch(e){} recognition = null; }
+  if (recognition) { try { recognition.stop(); } catch (e) { } recognition = null; }
   stopCamera();
   resetToIdle();
 }
@@ -279,7 +284,7 @@ function showResults() {
   document.getElementById('r-total-sub').textContent = totalFillers <= 5 ? '🟢 Excellent' : totalFillers <= 15 ? '🟡 Needs work' : '🔴 High usage';
 
   // Top word
-  const sorted = Object.entries(fillerCounts).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+  const sorted = Object.entries(fillerCounts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
   const topEl = document.getElementById('r-top');
   const topSubEl = document.getElementById('r-top-sub');
   if (sorted.length) {
@@ -301,7 +306,7 @@ function showResults() {
   const chart = document.getElementById('bar-chart');
   chart.innerHTML = '';
   const max = sorted.length ? sorted[0][1] : 1;
-  const all = Object.entries(fillerCounts).sort((a,b) => b[1]-a[1]);
+  const all = Object.entries(fillerCounts).sort((a, b) => b[1] - a[1]);
   all.forEach(([word, count]) => {
     const pct = max > 0 ? (count / max) * 100 : 0;
     const row = document.createElement('div');
