@@ -594,7 +594,197 @@
     justify-content: center;
   }
 
-  /* Scrollbar */
+
+  /* ── PDF UPLOAD (IDLE) ── */
+  .pdf-upload-area {
+    margin: 1.25rem auto 0;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .pdf-upload-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 1rem 1.5rem;
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: rgba(240,165,0,0.03);
+  }
+
+  .pdf-upload-box:hover,
+  .pdf-upload-box.drag-over {
+    border-color: var(--accent);
+    background: rgba(240,165,0,0.08);
+  }
+
+  .pdf-upload-icon { font-size: 1.3rem; }
+
+  .pdf-upload-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .pdf-upload-text .optional { color: var(--muted); }
+
+  .pdf-upload-hint {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .pdf-loaded-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1rem;
+    background: rgba(61,255,160,0.06);
+    border: 1px solid var(--green);
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+  }
+
+  .pdf-loaded-icon { color: var(--green); font-size: 0.9rem; }
+
+  #pdf-loaded-name {
+    flex: 1;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pdf-remove-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .pdf-remove-btn:hover { color: var(--red); border-color: var(--red); }
+
+  /* ── PDF VIEWER (ACTIVE) ── */
+  .pdf-viewer-panel {
+    grid-column: 1 / -1;
+  }
+
+  .pdf-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .pdf-mode-btns {
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .pdf-mode-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .pdf-mode-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pdf-mode-btn.active {
+    background: var(--accent);
+    color: #0a0a0f;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+
+  .pdf-canvas-wrap {
+    max-height: 420px;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    background: #fff;
+    border-radius: 4px;
+    transition: opacity 0.3s;
+    border: 1px solid var(--border);
+  }
+
+  .pdf-canvas-wrap.dim {
+    opacity: 0.2;
+    filter: grayscale(30%);
+  }
+
+  #pdf-canvas {
+    display: block;
+    max-width: 100%;
+  }
+
+  .pdf-hidden-notice {
+    text-align: center;
+    padding: 1.2rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .pdf-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+
+  .pdf-nav-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.06em;
+  }
+
+  .pdf-nav-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .pdf-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .pdf-page-info {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    min-width: 55px;
+    text-align: center;
+  }
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: var(--bg); }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }

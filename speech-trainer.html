@@ -6,6 +6,7 @@
 <title>Fluency — Presentation Trainer</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="script.js"></script>
 </head>
 <body>
@@ -28,6 +29,25 @@
         <span class="chip">so</span><span class="chip">right</span><span class="chip">okay</span>
         <span class="chip">actually</span><span class="chip">kind of</span><span class="chip">sort of</span>
       </div>
+      <!-- PDF Upload -->
+      <div class="pdf-upload-area" id="pdf-upload-area">
+        <input type="file" id="pdf-file-input" accept=".pdf" style="display:none" onchange="handlePDFUpload(this.files[0])">
+        <div class="pdf-upload-box" id="pdf-upload-box"
+             onclick="document.getElementById('pdf-file-input').click()"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="event.preventDefault();this.classList.remove('drag-over');handlePDFUpload(event.dataTransfer.files[0])">
+          <span class="pdf-upload-icon">📄</span>
+          <span class="pdf-upload-text">Upload Reference PDF <span class="optional">(optional)</span></span>
+          <span class="pdf-upload-hint">Your notes will be visible while you record</span>
+        </div>
+        <div class="pdf-loaded-indicator" id="pdf-loaded-indicator" style="display:none">
+          <span class="pdf-loaded-icon">✓</span>
+          <span id="pdf-loaded-name">document.pdf</span>
+          <button class="pdf-remove-btn" onclick="removePDF()">✕ Remove</button>
+        </div>
+      </div>
+
       <button class="start-btn" onclick="startSession()">▶ START 60 SECONDS</button>
       <p class="perms-note">Requires microphone access · Camera optional</p>
     </div>
@@ -67,6 +87,29 @@
       <div class="panel-label"><div class="dot live" id="cam-dot" style="background:var(--muted)"></div> CAMERA</div>
       <video id="video-preview" autoplay muted playsinline></video>
       <div class="camera-off-msg" id="cam-off-msg" style="display:none">Camera unavailable or permission denied</div>
+    </div>
+
+    <!-- PDF Viewer -->
+    <div class="panel pdf-viewer-panel" id="pdf-viewer-panel" style="display:none">
+      <div class="pdf-panel-header">
+        <div class="panel-label" style="margin-bottom:0">📄 REFERENCE PDF</div>
+        <div class="pdf-mode-btns">
+          <button class="pdf-mode-btn active" id="mode-full"   onclick="setPDFMode('full')">FULL</button>
+          <button class="pdf-mode-btn"         id="mode-dim"   onclick="setPDFMode('dim')">DIM</button>
+          <button class="pdf-mode-btn"         id="mode-hidden" onclick="setPDFMode('hidden')">HIDDEN</button>
+        </div>
+      </div>
+      <div class="pdf-hidden-notice" id="pdf-hidden-notice" style="display:none">
+        <span>PDF hidden — click FULL or DIM to view</span>
+      </div>
+      <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
+        <canvas id="pdf-canvas"></canvas>
+      </div>
+      <div class="pdf-nav" id="pdf-nav">
+        <button class="pdf-nav-btn" id="pdf-prev" onclick="prevPDFPage()">← PREV</button>
+        <span class="pdf-page-info" id="pdf-page-info">1 / 1</span>
+        <button class="pdf-nav-btn" id="pdf-next" onclick="nextPDFPage()">NEXT →</button>
+      </div>
     </div>
 
     <!-- Transcript -->

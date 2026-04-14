@@ -6,6 +6,99 @@ const FILLER_WORDS = [
 
 const DURATION = 60; // seconds
 
+// ── PDF STATE ──
+let pdfDoc = null;
+let pdfPageNum = 1;
+let pdfTotalPages = 0;
+let pdfMode = 'full';
+let pdfRendering = false;
+
+// ── PDF FUNCTIONS ──
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+});
+
+async function handlePDFUpload(file) {
+  if (!file || file.type !== 'application/pdf') return;
+  document.getElementById('pdf-upload-box').style.display = 'none';
+  document.getElementById('pdf-loaded-indicator').style.display = 'flex';
+  document.getElementById('pdf-loaded-name').textContent = file.name;
+  const arrayBuffer = await file.arrayBuffer();
+  pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  pdfTotalPages = pdfDoc.numPages;
+  pdfPageNum = 1;
+}
+
+function removePDF() {
+  pdfDoc = null;
+  pdfPageNum = 1;
+  pdfTotalPages = 0;
+  document.getElementById('pdf-upload-box').style.display = 'flex';
+  document.getElementById('pdf-loaded-indicator').style.display = 'none';
+  document.getElementById('pdf-file-input').value = '';
+}
+
+async function renderPDFPage(num) {
+  if (!pdfDoc || pdfRendering) return;
+  pdfRendering = true;
+  try {
+    const page = await pdfDoc.getPage(num);
+    const canvas = document.getElementById('pdf-canvas');
+    const ctx = canvas.getContext('2d');
+    const containerWidth = document.getElementById('pdf-canvas-wrap').offsetWidth || 700;
+    const viewport = page.getViewport({ scale: 1 });
+    const scale = (containerWidth - 4) / viewport.width;
+    const scaledViewport = page.getViewport({ scale });
+    canvas.width = scaledViewport.width;
+    canvas.height = scaledViewport.height;
+    await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+    document.getElementById('pdf-page-info').textContent = `${num} / ${pdfTotalPages}`;
+    document.getElementById('pdf-prev').disabled = num <= 1;
+    document.getElementById('pdf-next').disabled = num >= pdfTotalPages;
+  } finally {
+    pdfRendering = false;
+  }
+}
+
+function setPDFMode(mode) {
+  pdfMode = mode;
+  const wrap = document.getElementById('pdf-canvas-wrap');
+  const notice = document.getElementById('pdf-hidden-notice');
+  const nav = document.getElementById('pdf-nav');
+  ['full', 'dim', 'hidden'].forEach(m => {
+    document.getElementById(`mode-${m}`).classList.toggle('active', m === mode);
+  });
+  wrap.classList.remove('dim');
+  if (mode === 'full') {
+    wrap.style.display = 'flex';
+    notice.style.display = 'none';
+    nav.style.opacity = '1';
+    nav.style.pointerEvents = 'auto';
+  } else if (mode === 'dim') {
+    wrap.style.display = 'flex';
+    wrap.classList.add('dim');
+    notice.style.display = 'none';
+    nav.style.opacity = '0.4';
+    nav.style.pointerEvents = 'auto';
+  } else if (mode === 'hidden') {
+    wrap.style.display = 'none';
+    notice.style.display = 'block';
+    nav.style.opacity = '0.3';
+    nav.style.pointerEvents = 'none';
+  }
+}
+
+function nextPDFPage() {
+  if (pdfPageNum < pdfTotalPages) { pdfPageNum++; renderPDFPage(pdfPageNum); }
+}
+
+function prevPDFPage() {
+  if (pdfPageNum > 1) { pdfPageNum--; renderPDFPage(pdfPageNum); }
+}
+
 // ── STATE ──
 let timerInterval = null;
 let secondsLeft = DURATION;
@@ -235,6 +328,24 @@ async function startSession() {
 
   buildFillerGrid();
   showScreen('screen-active');
+
+  // Show PDF panel if a PDF was loaded
+  if (pdfDoc) {
+    const panel = document.getElementById('pdf-viewer-panel');
+    panel.style.display = 'block';
+    pdfMode = 'full';
+    ['full','dim','hidden'].forEach(m =>
+      document.getElementById(`mode-${m}`).classList.toggle('active', m === 'full')
+    );
+    document.getElementById('pdf-canvas-wrap').style.display = 'flex';
+    document.getElementById('pdf-canvas-wrap').classList.remove('dim');
+    document.getElementById('pdf-hidden-notice').style.display = 'none';
+    document.getElementById('pdf-nav').style.opacity = '1';
+    document.getElementById('pdf-nav').style.pointerEvents = 'auto';
+    setTimeout(() => renderPDFPage(pdfPageNum), 150);
+  } else {
+    document.getElementById('pdf-viewer-panel').style.display = 'none';
+  }
 
   sessionStartTime = Date.now();
   startTimer();
