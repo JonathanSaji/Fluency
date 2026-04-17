@@ -22,7 +22,7 @@
   <div id="screen-idle" class="visible">
     <div class="hero">
       <h1>Stop saying <em>"um"</em>.<br>Start speaking clearly.</h1>
-      <p>You'll have 60 seconds. Speak naturally. We'll count every filler word and show you exactly where to improve.</p>
+      <p>Set your time and speak naturally. We'll count every filler word and show you exactly where to improve.</p>
       <div class="filler-chips">
         <span class="chip">um</span><span class="chip">uh</span><span class="chip">like</span>
         <span class="chip">you know</span><span class="chip">basically</span><span class="chip">literally</span>
@@ -48,7 +48,17 @@
         </div>
       </div>
 
-      <button class="start-btn" onclick="startSession()">▶ START 60 SECONDS</button>
+      <div class="time-selector">
+        <label for="duration-select">SESSION TIME:</label>
+        <select id="duration-select">
+          <option value="30">30 Seconds</option>
+          <option value="60" selected>1 Minute</option>
+          <option value="120">2 Minutes</option>
+          <option value="300">5 Minutes</option>
+        </select>
+      </div>
+      
+      <button class="start-btn" onclick="startSession()">▶ START SESSION</button>
       <p class="perms-note">Requires microphone access · Camera optional</p>
     </div>
   </div>
