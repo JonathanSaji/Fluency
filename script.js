@@ -717,3 +717,7 @@ function generateTips(total, rate, sorted) {
   }
   return tips;
 }
+
+app.get('/fluency', (req, res) => {
+  res.sendFile(path.join(__dirname, 'speech-trainer.html'));
+});

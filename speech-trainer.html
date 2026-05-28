@@ -7,13 +7,200 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="script.js"></script>
+<style>
+  /* ── AUTH OVERLAY ── */
+  .fluency-login-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 15, 0.92);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 9999;
+  }
+
+  .fluency-login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #12121a;
+    border: 1px solid rgba(240, 165, 0, 0.4);
+    border-radius: 10px;
+    padding: 2rem;
+    color: #e8e6f0;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  }
+
+  .fluency-login-brand {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: #f0a500;
+    margin-bottom: 0.25rem;
+  }
+  .fluency-login-brand span { color: #e8e6f0; }
+
+  .fluency-login-subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: #5a5870;
+    letter-spacing: 0.06em;
+    margin-bottom: 1.5rem;
+  }
+
+  .fluency-login-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: #5a5870;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.35rem;
+  }
+
+  .fluency-login-input {
+    width: 100%;
+    background: #0a0a0f;
+    border: 1px solid #1e1e2e;
+    border-radius: 4px;
+    color: #e8e6f0;
+    padding: 0.6rem 0.75rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  .fluency-login-input:focus { border-color: #f0a500; }
+
+  .fluency-login-btn {
+    width: 100%;
+    padding: 0.75rem;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: #f0a500;
+    color: #0a0a0f;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 0 24px rgba(240,165,0,0.25);
+    margin-top: 0.25rem;
+  }
+  .fluency-login-btn:hover { transform: translateY(-1px); box-shadow: 0 0 40px rgba(240,165,0,0.4); }
+
+  .fluency-login-error {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: #ff4d6d;
+    min-height: 1rem;
+    margin-top: -0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .fluency-login-toggle {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: #5a5870;
+    text-align: center;
+    margin-top: 1rem;
+  }
+  .fluency-login-toggle button {
+    background: none;
+    border: none;
+    color: #f0a500;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+  }
+
+  /* user pill in header */
+  .fluency-user-pill {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: #5a5870;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+  .fluency-logout-btn {
+    background: none;
+    border: 1px solid #1e1e2e;
+    color: #5a5870;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    letter-spacing: 0.04em;
+  }
+  .fluency-logout-btn:hover { color: #ff4d6d; border-color: #ff4d6d; }
+</style>
+<script src="script.js" defer></script>
 </head>
 <body>
+
+<!-- ── AUTH OVERLAY ── -->
+<div class="fluency-login-overlay" id="fluency-login-overlay">
+  <div class="fluency-login-card">
+    <div class="fluency-login-brand">Flue<span>cy</span></div>
+    <div class="fluency-login-subtitle">SIGN IN WITH YOUR SUBSYNC ACCOUNT</div>
+
+    <!-- Login panel -->
+    <div id="fluency-login-panel">
+      <label class="fluency-login-label" for="fl-identifier">Username or Email</label>
+      <input class="fluency-login-input" type="text" id="fl-identifier" autocomplete="username" placeholder="username or email" />
+
+      <label class="fluency-login-label" for="fl-password">Password</label>
+      <input class="fluency-login-input" type="password" id="fl-password" autocomplete="current-password" placeholder="password" />
+
+      <div class="fluency-login-error" id="fl-login-error"></div>
+
+      <button class="fluency-login-btn" id="fl-login-btn">▶ SIGN IN</button>
+
+      <div class="fluency-login-toggle">
+        No account? <button id="fl-show-signup">Create one</button>
+      </div>
+    </div>
+
+    <!-- Signup panel -->
+    <div id="fluency-signup-panel" style="display:none">
+      <label class="fluency-login-label" for="fl-su-username">Username</label>
+      <input class="fluency-login-input" type="text" id="fl-su-username" autocomplete="username" placeholder="choose a username" />
+
+      <label class="fluency-login-label" for="fl-su-email">Email</label>
+      <input class="fluency-login-input" type="email" id="fl-su-email" autocomplete="email" placeholder="you@example.com" />
+
+      <label class="fluency-login-label" for="fl-su-password">Password</label>
+      <input class="fluency-login-input" type="password" id="fl-su-password" autocomplete="new-password" placeholder="create a password" />
+
+      <div class="fluency-login-error" id="fl-signup-error"></div>
+
+      <button class="fluency-login-btn" id="fl-signup-btn">CREATE ACCOUNT</button>
+
+      <div class="fluency-login-toggle">
+        Have an account? <button id="fl-show-login">Sign in</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="logo">Flue<span>cy</span></div>
   <div class="badge">PRESENT IN STYLE</div>
+  <div class="fluency-user-pill" id="fluency-user-pill" style="display:none">
+    <span id="fluency-username-label"></span>
+    <button class="fluency-logout-btn" id="fluency-logout-btn">SIGN OUT</button>
+  </div>
 </header>
 
 <main id="app">
@@ -87,9 +274,7 @@
     <!-- Filler breakdown -->
     <div class="panel">
       <div class="panel-label">FILLER BREAKDOWN</div>
-      <div class="filler-grid" id="filler-grid">
-        <!-- populated by JS -->
-      </div>
+      <div class="filler-grid" id="filler-grid"></div>
     </div>
 
     <!-- Camera -->
@@ -142,7 +327,6 @@
       <p id="result-subtitle">Here's how you did in your 60-second session.</p>
     </div>
 
-    <!-- Score cards -->
     <div class="score-card anim">
       <div class="stat">
         <div class="stat-label">Total Fillers</div>
@@ -161,7 +345,6 @@
       </div>
     </div>
 
-    <!-- Bar chart + video -->
     <div class="breakdown anim">
       <h3>BREAKDOWN BY WORD</h3>
       <div id="bar-chart"></div>
@@ -172,13 +355,11 @@
       <div class="playback-label"><div class="dot" style="background:var(--green)"></div> YOUR RECORDING — WATCH YOUR BODY LANGUAGE</div>
     </div>
 
-    <!-- Tips -->
     <div class="feedback-panel anim">
       <h3>COACHING TIPS</h3>
       <div id="tips-container"></div>
     </div>
 
-    <!-- Full transcript -->
     <div class="result-transcript anim">
       <h3>FULL TRANSCRIPT</h3>
       <div id="result-transcript-text">No transcript captured.</div>
@@ -190,5 +371,66 @@
   </div>
 
 </main>
+
+<script>
+// ── FLUENCY AUTH ──
+(function() {
+  const overlay       = document.getElementById('fluency-login-overlay');
+  const loginPanel    = document.getElementById('fluency-login-panel');
+  const signupPanel   = document.getElementById('fluency-signup-panel');
+  const loginError    = document.getElementById('fl-login-error');
+  const signupError   = document.getElementById('fl-signup-error');
+  const userPill      = document.getElementById('fluency-user-pill');
+  const usernameLabel = document.getElementById('fluency-username-label');
+
+  function showOverlay() { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+  function hideOverlay() { overlay.style.display = 'none'; document.body.style.overflow = ''; }
+  function showLogin()   { loginPanel.style.display = ''; signupPanel.style.display = 'none'; loginError.textContent = ''; }
+  function showSignup()  { signupPanel.style.display = ''; loginPanel.style.display = 'none'; signupError.textContent = ''; }
+
+  function setUser(username) {
+    usernameLabel.textContent = username;
+    userPill.style.display = 'flex';
+    hideOverlay();
+  }
+
+  function clearUser() {
+    userPill.style.display = 'none';
+    showOverlay();
+    showLogin();
+  }
+
+  document.getElementById('fl-show-signup').addEventListener('click', showSignup);
+  document.getElementById('fl-show-login').addEventListener('click', showLogin);
+
+  document.getElementById('fl-login-btn').addEventListener('click', () => {
+    const identifier = document.getElementById('fl-identifier').value.trim();
+    const password   = document.getElementById('fl-password').value;
+    loginError.textContent = '';
+    if (!identifier || !password) { loginError.textContent = 'Please fill in all fields.'; return; }
+    if (identifier === 'user1' && password === 'pass1') {
+      setUser('user1');
+    } else {
+      loginError.textContent = 'Invalid username or password.';
+    }
+  });
+
+  document.getElementById('fl-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('fl-login-btn').click();
+  });
+
+  document.getElementById('fl-signup-btn').addEventListener('click', () => {
+    signupError.textContent = 'Sign-up disabled. Use user1 / pass1 to sign in.';
+  });
+
+  document.getElementById('fluency-logout-btn').addEventListener('click', () => {
+    clearUser();
+  });
+
+  showOverlay();
+  showLogin();
+})();
+</script>
+
 </body>
 </html>
