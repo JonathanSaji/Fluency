@@ -31,8 +31,8 @@ app.post('/api/login', async (req, res) => {
     });
 
     req.session.userId = account.email;
-    req.session.username = account.name || account.email;
-    res.json({ success: true, username: account.name || account.email });
+    req.session.username = account.username || account.email;
+    res.json({ success: true, username: account.username || account.email });
   } catch (err) {
     if (err instanceof AuthInputError) {
       return res.status(err.status).json({ error: err.message });
@@ -51,8 +51,8 @@ app.post('/api/signup', async (req, res) => {
     });
 
     req.session.userId = account.email;
-    req.session.username = account.name || account.email;
-    res.json({ success: true, username: account.name || account.email });
+    req.session.username = account.username || account.email;
+    res.json({ success: true, username: account.username || account.email });
   } catch (err) {
     if (err instanceof AuthInputError || err instanceof AuthConflictError) {
       return res.status(err.status).json({ error: err.message });
