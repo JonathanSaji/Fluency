@@ -400,18 +400,50 @@
     showLogin();
   }
 
+  // Check if already logged in
+  async function checkSession() {
+    try {
+      const res = await fetch('/api/session');
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.username);
+        return true;
+      }
+    } catch (err) {
+      console.error('Session check error:', err);
+    }
+    return false;
+  }
+
   document.getElementById('fl-show-signup').addEventListener('click', showSignup);
   document.getElementById('fl-show-login').addEventListener('click', showLogin);
 
-  document.getElementById('fl-login-btn').addEventListener('click', () => {
+  document.getElementById('fl-login-btn').addEventListener('click', async () => {
     const identifier = document.getElementById('fl-identifier').value.trim();
     const password   = document.getElementById('fl-password').value;
     loginError.textContent = '';
-    if (!identifier || !password) { loginError.textContent = 'Please fill in all fields.'; return; }
-    if (identifier === 'user1' && password === 'pass1') {
-      setUser('user1');
-    } else {
-      loginError.textContent = 'Invalid username or password.';
+
+    if (!identifier || !password) {
+      loginError.textContent = 'Please fill in all fields.';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.username);
+      } else {
+        loginError.textContent = data.error || 'Login failed';
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      loginError.textContent = 'Network error';
     }
   });
 
@@ -419,16 +451,52 @@
     if (e.key === 'Enter') document.getElementById('fl-login-btn').click();
   });
 
-  document.getElementById('fl-signup-btn').addEventListener('click', () => {
-    signupError.textContent = 'Sign-up disabled. Use user1 / pass1 to sign in.';
+  document.getElementById('fl-signup-btn').addEventListener('click', async () => {
+    const username = document.getElementById('fl-su-username').value.trim();
+    const email = document.getElementById('fl-su-email').value.trim();
+    const password = document.getElementById('fl-su-password').value;
+    signupError.textContent = '';
+
+    if (!username || !email || !password) {
+      signupError.textContent = 'Please fill in all fields.';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.username);
+      } else {
+        signupError.textContent = data.error || 'Signup failed';
+      }
+    } catch (err) {
+      console.error('Signup error:', err);
+      signupError.textContent = 'Network error';
+    }
   });
 
-  document.getElementById('fluency-logout-btn').addEventListener('click', () => {
+  document.getElementById('fluency-logout-btn').addEventListener('click', async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
     clearUser();
   });
 
-  showOverlay();
-  showLogin();
+  // Initialize: check session or show login
+  checkSession().then(authenticated => {
+    if (!authenticated) {
+      showOverlay();
+      showLogin();
+    }
+  });
 })();
 </script>
 
