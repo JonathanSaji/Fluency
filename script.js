@@ -690,6 +690,33 @@ function showResults() {
     div.innerHTML = `<span class="tip-icon">${t.icon}</span><span>${t.text}</span>`;
     tc.appendChild(div);
   });
+
+  // Calculate WPM
+  const wordsCount = tokenize(fullTranscript).length;
+  const computedWpm = Math.round((wordsCount / elapsed) * 60);
+
+  // Save session to database
+  const tipsText = tips.map(t => `${t.icon} ${t.text}`).join('\n');
+  fetch('/api/sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      duration: elapsed,
+      wpm: computedWpm,
+      filler_word_count: totalFillers,
+      filler_words_breakdown: fillerCounts,
+      transcript: fullTranscript,
+      coaching_tips: tipsText
+    })
+  }).then(res => {
+    if (res.ok) {
+      console.log('Session saved successfully');
+      // If we have a loadHistory function, we can refresh the history here
+      if (typeof loadHistory === 'function') {
+        loadHistory();
+      }
+    }
+  }).catch(err => console.error('Error saving session:', err));
 }
 
 function generateTips(total, rate, sorted) {

@@ -247,6 +247,17 @@
       
       <button class="start-btn" onclick="startSession()">▶ START SESSION</button>
       <p class="perms-note">Requires microphone access · Camera optional</p>
+
+      <!-- History Section -->
+      <div class="history-panel anim" id="history-panel" style="display:none; max-width: 600px; margin: 2.5rem auto 0; text-align: left;">
+        <h3 style="font-family: 'Space Mono', monospace; font-size: 0.85rem; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+          <span>📜 PAST SESSIONS</span>
+          <button id="clear-history-btn" style="background: none; border: none; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.65rem; cursor: pointer; text-decoration: underline;" onclick="clearHistory()">Clear All</button>
+        </h3>
+        <div id="history-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; padding-right: 0.25rem;">
+          <!-- Loaded via JS -->
+        </div>
+      </div>
     </div>
   </div>
 
@@ -388,16 +399,92 @@
   function showLogin()   { loginPanel.style.display = ''; signupPanel.style.display = 'none'; loginError.textContent = ''; }
   function showSignup()  { signupPanel.style.display = ''; loginPanel.style.display = 'none'; signupError.textContent = ''; }
 
+  async function loadHistory() {
+    const hp = document.getElementById('history-panel');
+    const hl = document.getElementById('history-list');
+    if (!hp || !hl) return;
+
+    try {
+      const res = await fetch('/api/sessions');
+      if (!res.ok) {
+        hp.style.display = 'none';
+        return;
+      }
+      const data = await res.json();
+      if (!data.sessions || data.sessions.length === 0) {
+        hl.innerHTML = '<div style="color: var(--muted); font-size: 0.75rem; text-align: center; font-family: \'Space Mono\', monospace; padding: 1rem;">No history sessions yet. Start a session above!</div>';
+        hp.style.display = 'block';
+        return;
+      }
+
+      hl.innerHTML = data.sessions.map((s, idx) => {
+        const dateStr = new Date(s.created_at).toLocaleString();
+        const breakdown = s.filler_words_breakdown || {};
+        const sorted = Object.entries(breakdown).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+        const topFiller = sorted.length ? `(Top: ${sorted[0][0]} x${sorted[0][1]})` : '(No fillers 🎉)';
+        const transcriptPreview = s.transcript ? s.transcript.slice(0, 100) + (s.transcript.length > 100 ? '...' : '') : 'No transcript';
+        const formattedTips = s.coaching_tips ? s.coaching_tips.split('\n').map(t => `<div style="font-size: 0.75rem; margin-top: 0.25rem;">${t}</div>`).join('') : '';
+
+        return `
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; font-family: 'Space Mono', monospace;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.7rem; color: var(--muted);">${dateStr}</span>
+              <span style="font-size: 0.75rem; font-weight: 700; color: ${s.filler_word_count <= 5 ? 'var(--green)' : s.filler_word_count <= 15 ? 'var(--accent)' : 'var(--red)'};">
+                ${s.filler_word_count} Fillers ${topFiller}
+              </span>
+            </div>
+            <div style="display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text); margin-bottom: 0.5rem;">
+              <span>⏱ ${s.duration}s</span>
+              <span>🗣 ${s.wpm} WPM</span>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--muted); font-style: italic;">
+              "${transcriptPreview}"
+            </div>
+            <div id="details-${s.id}" style="display: none; margin-top: 0.75rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+              <div style="font-weight: 700; font-size: 0.7rem; text-transform: uppercase; color: var(--accent); margin-bottom: 0.25rem;">Coaching Feedback:</div>
+              ${formattedTips || '<div style="font-size: 0.75rem; color: var(--muted);">No coaching tips.</div>'}
+              <div style="font-weight: 700; font-size: 0.7rem; text-transform: uppercase; color: var(--accent); margin-top: 0.75rem; margin-bottom: 0.25rem;">Full Transcript:</div>
+              <div style="font-size: 0.75rem; color: var(--text); white-space: pre-wrap; line-height: 1.4;">${s.transcript || ''}</div>
+            </div>
+            <button onclick="document.getElementById('details-${s.id}').style.display = document.getElementById('details-${s.id}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent === 'Show Details' ? 'Hide Details' : 'Show Details';" style="background: none; border: 1px solid var(--border); border-radius: 3px; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.65rem; cursor: pointer; padding: 0.2rem 0.5rem; margin-top: 0.5rem; display: block; width: 100%; text-align: center;">Show Details</button>
+          </div>
+        `;
+      }).join('');
+
+      hp.style.display = 'block';
+    } catch (err) {
+      console.error('Failed to load history:', err);
+    }
+  }
+
+  async function clearHistory() {
+    if (!confirm('Are you sure you want to clear your speech training history?')) return;
+    try {
+      const res = await fetch('/api/sessions', { method: 'DELETE' });
+      if (res.ok) {
+        loadHistory();
+      }
+    } catch (err) {
+      console.error('Failed to clear history:', err);
+    }
+  }
+
+  window.loadHistory = loadHistory;
+  window.clearHistory = clearHistory;
+
   function setUser(username) {
     usernameLabel.textContent = username;
     userPill.style.display = 'flex';
     hideOverlay();
+    loadHistory();
   }
 
   function clearUser() {
     userPill.style.display = 'none';
     showOverlay();
     showLogin();
+    const hp = document.getElementById('history-panel');
+    if (hp) hp.style.display = 'none';
   }
 
   // Check if already logged in

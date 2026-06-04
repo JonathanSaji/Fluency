@@ -75,6 +75,118 @@ app.get('/api/session', (req, res) => {
   }
 });
 
+// Save a speech session
+app.post('/api/sessions', async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  try {
+    // Look up the account ID by email
+    const accountResult = await dbQuery(
+      'SELECT id FROM accounts WHERE email = $1 LIMIT 1',
+      [req.session.userId]
+    );
+
+    const userId = accountResult.rows[0]?.id;
+    if (!userId) {
+      return res.status(404).json({ error: 'User account not found' });
+    }
+
+    const {
+      duration,
+      wpm,
+      filler_word_count,
+      filler_words_breakdown,
+      transcript,
+      coaching_tips,
+      video_url
+    } = req.body;
+
+    await dbQuery(
+      `INSERT INTO "FluencySync".sessions 
+       (user_id, duration, wpm, filler_word_count, filler_words_breakdown, transcript, coaching_tips, video_url)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        userId,
+        duration || 60,
+        wpm || 0,
+        filler_word_count || 0,
+        JSON.stringify(filler_words_breakdown || {}),
+        transcript || '',
+        coaching_tips || '',
+        video_url || null
+      ]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Failed to save session:', err);
+    res.status(500).json({ error: 'Failed to save session' });
+  }
+});
+
+// Retrieve sessions for the current user
+app.get('/api/sessions', async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  try {
+    const accountResult = await dbQuery(
+      'SELECT id FROM accounts WHERE email = $1 LIMIT 1',
+      [req.session.userId]
+    );
+
+    const userId = accountResult.rows[0]?.id;
+    if (!userId) {
+      return res.status(404).json({ error: 'User account not found' });
+    }
+
+    const result = await dbQuery(
+      `SELECT id, duration, wpm, filler_word_count, filler_words_breakdown, transcript, coaching_tips, video_url, created_at
+       FROM "FluencySync".sessions
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    res.json({ sessions: result.rows });
+  } catch (err) {
+    console.error('Failed to fetch sessions:', err);
+    res.status(500).json({ error: 'Failed to fetch sessions' });
+  }
+});
+
+// Clear all sessions for the current user
+app.delete('/api/sessions', async (req, res) => {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+
+  try {
+    const accountResult = await dbQuery(
+      'SELECT id FROM accounts WHERE email = $1 LIMIT 1',
+      [req.session.userId]
+    );
+
+    const userId = accountResult.rows[0]?.id;
+    if (!userId) {
+      return res.status(404).json({ error: 'User account not found' });
+    }
+
+    await dbQuery(
+      'DELETE FROM "FluencySync".sessions WHERE user_id = $1',
+      [userId]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Failed to delete sessions:', err);
+    res.status(500).json({ error: 'Failed to delete sessions' });
+  }
+});
+
 // Main app
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'speech-trainer.html'));
