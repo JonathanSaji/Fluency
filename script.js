@@ -1,6 +1,6 @@
 // ── CONFIG ──
 const FILLER_WORDS = [
-  'um', 'uh', 'umm', 'uhh', 'hm', 'hmm', 'mm',
+  'um', 'uh', 'hm',
   'like', 'basically', 'literally', 'so', 'right', 'okay', 'actually',
   'you know', 'kind of', 'sort of', 'i mean', 'you see', 'well', 'anyway'
 ];
@@ -21,7 +21,7 @@ function normalizeTranscript(text) {
     .replace(/\bum+h?\b/gi,       'um')   // umm, ummm, umh → um
     .replace(/\buh+\b/gi,         'uh')   // uhh, uhhh → uh
     .replace(/\bhm+\b/gi,         'hm')   // hmm, hmmm → hm
-    .replace(/\bm{2,}\b/gi,       'mm');  // mmm, mmmm → mm
+    .replace(/\bm{2,}\b/gi,       'hm');  // mmm, mmmm → hm (canonical)
 }
 
 let DURATION = 60; // seconds
@@ -135,7 +135,11 @@ let sessionStartTime = null;
 let sessionElapsed = 0;
 let noSpeechTimer = null;
 let hadSpeech = false;
-let interimFillersSeen = new Set(); // tracks interim fillers to avoid double-counting
+
+// Track interim filler counts per result index so we can subtract them when the
+// final result arrives (avoiding double-counting interim + final).
+// Structure: Map<resultIndex, Map<fillerKey, count>>
+let interimFillerCounts = new Map();
 
 // ── INIT FILLER MAP ──
 function resetFillerCounts() {
@@ -181,6 +185,20 @@ function bumpFiller(word) {
   }
 }
 
+// Reverse a bump — used when interim counts are replaced by final counts
+function unbumpFiller(word) {
+  const key = FILLER_CANONICAL[word] ?? word;
+  if ((fillerCounts[key] ?? 0) <= 0) return;
+  fillerCounts[key]--;
+  totalFillers = Math.max(0, totalFillers - 1);
+  document.getElementById('total-count').textContent = totalFillers;
+  const id = `fi-${key.replace(/\s+/g, '_')}`;
+  const el = document.getElementById(id);
+  if (el) {
+    el.querySelector('.filler-count').textContent = fillerCounts[key];
+  }
+}
+
 // ── TIMER ──
 function startTimer() {
   secondsLeft = DURATION;
@@ -202,7 +220,7 @@ function updateTimerDisplay() {
   const bar = document.getElementById('timer-bar');
   const pct = (secondsLeft / DURATION) * 100;
   bar.style.width = pct + '%';
-  bar.style.background = secondsLeft <= 10 ? 'var(--red)' : secondsLeft <= 20 ? 'var(--accent)' : 'var(--accent)';
+  bar.style.background = secondsLeft <= 10 ? 'var(--red)' : 'var(--accent)';
 }
 
 // ── SPEECH RECOGNITION ──
@@ -225,8 +243,6 @@ function startSpeechRecognition() {
   };
 
   let interimSpan = null;
-  // Track which result indices we've already finalised to avoid double-counting
-  let finalisedUpTo = -1;
 
   recognition.onresult = (event) => {
     hadSpeech = true;
@@ -236,8 +252,8 @@ function startSpeechRecognition() {
 
     for (let i = event.resultIndex; i < event.results.length; i++) {
       const res = event.results[i];
+
       if (res.isFinal) {
-        // Use the top alternative for display
         const text = res[0].transcript;
         fullTranscript += text + ' ';
         const highlighted = highlightFillers(text);
@@ -248,17 +264,24 @@ function startSpeechRecognition() {
         transcript.appendChild(finalEl);
         transcript.scrollTop = transcript.scrollHeight;
 
-        // Count from top alternative
+        // --- FIX: Undo any interim counts for this result index first ---
+        const interimForThisResult = interimFillerCounts.get(i);
+        if (interimForThisResult) {
+          for (const [word, count] of interimForThisResult) {
+            for (let n = 0; n < count; n++) unbumpFiller(word);
+          }
+          interimFillerCounts.delete(i);
+        }
+
+        // Now count from the final (authoritative) transcript
         countFillers(text);
 
         // Also scan lower-ranked alternatives for hesitations missed in alt[0]
-        // Only count um/uh/hm — these are the sounds most likely to be in alt[1+]
-        const HESITATIONS = new Set(['um','uh','hm']);
+        const HESITATIONS = new Set(['um', 'uh', 'hm']);
         for (let a = 1; a < res.length; a++) {
           const altText = normalizeTranscript(res[a].transcript);
           detectFillers(altText).forEach(m => {
             if (HESITATIONS.has(m.word)) {
-              // Only bump if top alt didn't already have it at this position
               const topNorm = normalizeTranscript(text);
               if (!topNorm.toLowerCase().includes(m.word)) {
                 bumpFiller(m.word);
@@ -267,29 +290,42 @@ function startSpeechRecognition() {
           });
         }
 
-        // Clear interim dedup keys for this result index now it's final
-        interimFillersSeen.forEach(k => {
-          if (k.startsWith(`${i}:`)) interimFillersSeen.delete(k);
-        });
-        finalisedUpTo = i;
-
       } else {
-        // Interim: scan for hesitations and count them early (with dedup)
+        // Interim: detect hesitations early and track them per-result-index
         const interimText = normalizeTranscript(res[0].transcript);
         interim += res[0].transcript;
+
+        // Build a fresh count for this interim snapshot
+        const freshCounts = new Map();
         detectFillers(interimText).forEach(m => {
-          if (['um','uh','hm'].includes(m.word)) {
-            const key = `${i}:${m.word}:${m.start}`;
-            if (!interimFillersSeen.has(key)) {
-              interimFillersSeen.add(key);
-              bumpFiller(m.word);
-            }
+          if (['um', 'uh', 'hm'].includes(m.word)) {
+            const canonical = FILLER_CANONICAL[m.word] ?? m.word;
+            freshCounts.set(canonical, (freshCounts.get(canonical) ?? 0) + 1);
           }
         });
+
+        // Diff against what we already counted for this result index
+        const prev = interimFillerCounts.get(i) ?? new Map();
+        for (const [word, newCount] of freshCounts) {
+          const oldCount = prev.get(word) ?? 0;
+          const delta = newCount - oldCount;
+          if (delta > 0) {
+            for (let d = 0; d < delta; d++) bumpFiller(word);
+          } else if (delta < 0) {
+            for (let d = 0; d < -delta; d++) unbumpFiller(word);
+          }
+        }
+        // Handle words that disappeared from the interim
+        for (const [word, oldCount] of prev) {
+          if (!freshCounts.has(word)) {
+            for (let d = 0; d < oldCount; d++) unbumpFiller(word);
+          }
+        }
+        interimFillerCounts.set(i, freshCounts);
       }
     }
 
-    // update interim
+    // update interim display
     if (interimSpan) interimSpan.remove();
     if (interim) {
       interimSpan = document.createElement('span');
@@ -319,10 +355,6 @@ function startSpeechRecognition() {
 }
 
 // ── CONTEXT-AWARE FILLER DETECTION ──
-//
-// Works at the TOKEN level so prev/next word lookups are always accurate.
-// Each token is { word: string (lowercase, letters only), raw: string, start: number }
-//
 function tokenize(text) {
   const tokens = [];
   const re = /\S+/g;
@@ -340,111 +372,70 @@ function tokenize(text) {
 
 function w(tokens, i) { return i >= 0 && i < tokens.length ? tokens[i].word : ''; }
 
-// Returns true if this token occurrence is genuinely a filler word
 function isFiller(fw, tokens, i) {
   const prev  = w(tokens, i - 1);
-  const prev2 = w(tokens, i - 2);
   const next  = w(tokens, i + 1);
-  const next2 = w(tokens, i + 2);
 
   switch (fw) {
-
     case 'right': {
-      // "right now / here / away / there / back / up / down / through" — adverbial emphasis → NOT filler
       if (/^(now|here|away|there|back|up|down|through|along|in|out|over|around|before|after|next|then)$/.test(next)) return false;
-      // "the/a/your/my/his/her/this/that right ..." — determiner before it → adjective use → NOT filler
       if (/^(the|a|an|your|my|his|her|their|our|its|this|that|one|no|every|each)$/.test(prev)) return false;
-      // "turn/go/move right" — directional → NOT filler
       if (/^(turn|go|veer|lean|look|move|swing|bear|hang|step|slide|shift)$/.test(prev)) return false;
-      // "all/far/hard/alt right" — compound → NOT filler
       if (/^(all|far|hard|alt|center|centre)$/.test(prev)) return false;
-      // "right hand/side/angle/answer/way/place/time/choice/wing..." → NOT filler
       if (/^(hand|side|wing|angle|answer|way|direction|place|time|choice|decision|track|path|person|thing|point|moment|move|call|foot|eye|ear|lane|turn)$/.test(next)) return false;
-      // "not right" → NOT filler
       if (prev === 'not') return false;
-      // Everything else → filler ("...right?" / "right so" / "and right, ...")
       return true;
     }
-
     case 'like': {
-      // "would/should/could/might/do/did/will like" → verb use → NOT filler
       if (/^(would|should|could|might|may|do|does|did|will|wouldnt|shouldnt|couldnt|wont|dont|doesnt|didnt)$/.test(prev)) return false;
-      // "I/we/you/they/he/she like(s)" → genuine verb → NOT filler
-      if (/^(i|we|you|they|he|she|who|people|everyone|nobody|somebody|anyone|everyone)$/.test(prev)) return false;
-      // "feels/looks/seems/sounds/smells/acts/appears like" → comparison → NOT filler
+      if (/^(i|we|you|they|he|she|who|people|everyone|nobody|somebody|anyone)$/.test(prev)) return false;
       if (/^(feel|feels|felt|look|looks|looked|seem|seems|seemed|sound|sounds|sounded|taste|tastes|smell|smells|act|acts|acted|appear|appears|appeared)$/.test(prev)) return false;
-      // "more/just/much/exactly/nothing/something/nothing like" → comparison → NOT filler
       if (/^(more|less|just|much|exactly|nothing|something|anything|everything|kind|sort|type|bit|rather|almost|quite|not|nowhere|never)$/.test(prev)) return false;
-      // "like this/that" after a real subject (not a conjunction) → demonstrative → NOT filler
       if (/^(this|that)$/.test(next) && !/^(and|but|so|or|um|uh|like)$/.test(prev) && prev !== '') return false;
       return true;
     }
-
     case 'well': {
-      // "went/did/works/performed/handled well" → adverb of manner → NOT filler
-      if (/^(went|goes|go|doing|done|did|work|works|worked|sleep|slept|play|played|run|ran|end|ended|turn|turned|perform|performs|performed|behaved|respond|responds|aged|fare|fared|function|functions|handle|handles|handled|communicate|communicates|sit|sits|sat|stand|stands|stood|eat|ate|eats)$/.test(prev)) return false;
-      // "very/pretty/quite/as/so/not/extremely well" → degree adverb → NOT filler
+      if (/^(went|goes|go|doing|done|did|work|works|worked|sleep|slept|play|played|run|ran|end|ended|turn|turned|perform|performs|performed|behaved|respond|responds|aged|fare|fared|function|functions|handle|handles|handled)$/.test(prev)) return false;
       if (/^(as|not|very|pretty|quite|so|extremely|remarkably|particularly|incredibly|doing|feeling|fairly|reasonably)$/.test(prev)) return false;
-      // "well known/being/rounded/informed/established/deserved/suited/balanced/defined..." → compound → NOT filler
       if (/^(known|being|rounded|informed|established|intentioned|deserved|placed|suited|versed|aware|balanced|defined|built|thought|received|designed|written|spoken|read|made|paid|earned|spent|used|equipped|funded|maintained|regarded|respected|documented|supported|connected|attended|liked|loved|managed|run|led|organized)$/.test(next)) return false;
       return true;
     }
-
     case 'so': {
-      // "so much/many/good/great/far/long/often..." → genuine intensifier → NOT filler
-      if (/^(much|many|few|little|far|long|often|well|good|great|bad|important|big|small|easy|hard|clear|simple|complex|difficult|fast|slow|quick|smart|strong|weak|high|low|close|wide|happy|sad|busy|tired|excited|cool|nice|interesting|weird|strange|powerful|obvious|deep|helpful|useful|effective|beautiful|awful|terrible|wonderful|amazing|incredible|popular|common|rare|special|serious|significant|different|similar|large|small|full|empty|young|old|new|true|false|sure|certain|glad|sorry|proud|grateful|thankful)$/.test(next)) return false;
-      // "so that" → purpose clause → NOT filler
+      if (/^(much|many|few|little|far|long|often|well|good|great|bad|important|big|small|easy|hard|clear|simple|complex|difficult|fast|slow|quick|smart|strong|weak|high|low|close|wide|happy|sad|busy|tired|excited|cool|nice|interesting|weird|strange|powerful|obvious|deep|helpful|useful|effective|beautiful|awful|terrible|wonderful|amazing|incredible|popular|common|rare|special|serious|significant|different|similar|large|full|empty|young|old|new|true|false|sure|certain|glad|sorry|proud|grateful|thankful)$/.test(next)) return false;
       if (next === 'that') return false;
-      // "and/even/or/if/why/not/how so" → connective/response → NOT filler
       if (/^(and|even|or|if|why|not|how|just|ever|never)$/.test(prev)) return false;
-      // "or so" (approximation) → NOT filler
       if (prev === 'or') return false;
       return true;
     }
-
     case 'okay': {
-      // "are you okay / is it okay / sounds okay / that's okay" → genuine adjective → NOT filler
-      if (/^(you|he|she|it|that|this|everything|everyone|i|we|they|things|everything)$/.test(prev)) return false;
+      if (/^(you|he|she|it|that|this|everything|everyone|i|we|they|things)$/.test(prev)) return false;
       if (/^(are|is|was|were|sounds|looks|seems|feel|feels|be)$/.test(prev)) return false;
       return true;
     }
-
-    case 'actually': {
-      // "actually" is almost always a filler/hedge in speech — keep flagging
-      return true;
-    }
-
+    case 'actually':
     case 'basically':
     case 'literally':
     case 'anyway':
       return true;
-
     case 'kind of':
     case 'sort of': {
-      // "kind of blue/sad/weird" → legitimate qualifier followed by adjective — still flag, it's a hedge
-      // Only skip if it's a real set phrase: "sort of thing", "kind of person"
       if (/^(thing|person|way|place|situation|idea|concept|topic|subject)$/.test(next)) return false;
       return true;
     }
-
-    case 'um': case 'uh': case 'umm': case 'uhh':
-    case 'hm': case 'hmm': case 'mm':
+    case 'um': case 'uh': case 'hm':
     case 'you know': case 'i mean': case 'you see':
       return true;
-
     default:
       return true;
   }
 }
 
-// Find all filler matches with their char positions, skipping overlaps and non-filler context
 function detectFillers(text) {
   const lower = text.toLowerCase();
   const tokens = tokenize(lower);
   const usedTokens = new Set();
   const matches = [];
 
-  // Sort: multi-word first, then longer single words first
   const sorted = [...FILLER_WORDS].sort((a, b) => {
     const am = a.includes(' ') ? 1 : 0;
     const bm = b.includes(' ') ? 1 : 0;
@@ -453,23 +444,19 @@ function detectFillers(text) {
   });
 
   for (const fw of sorted) {
-    const fwTokens = fw.split(' '); // e.g. ['you', 'know']
+    const fwTokens = fw.split(' ');
     const span = fwTokens.length;
 
     for (let i = 0; i <= tokens.length - span; i++) {
-      // Check if all tokens in the span match the filler word tokens
       const match = fwTokens.every((ft, offset) => tokens[i + offset].word === ft);
       if (!match) continue;
 
-      // Check no token in this span already used by a longer match
       let overlap = false;
       for (let s = 0; s < span; s++) { if (usedTokens.has(i + s)) { overlap = true; break; } }
       if (overlap) continue;
 
-      // Context check
       if (!isFiller(fw, tokens, i)) continue;
 
-      // Record match using original-case text positions
       const startChar = tokens[i].start;
       const endChar   = tokens[i + span - 1].end;
       matches.push({ word: fw, start: startChar, end: endChar, original: text.slice(startChar, endChar) });
@@ -513,7 +500,6 @@ async function startCamera() {
     document.getElementById('cam-off-msg').style.display = 'none';
     document.getElementById('cam-dot').style.background = 'var(--red)';
     document.getElementById('cam-dot').classList.add('live');
-    // Start recording
     recordedChunks = [];
     mediaRecorder = new MediaRecorder(videoStream);
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
@@ -542,7 +528,7 @@ async function startSession() {
   hadSpeech = false;
   sessionElapsed = 0;
   sessionActive = true;
-  interimFillersSeen = new Set();
+  interimFillerCounts = new Map();
   document.getElementById('transcript').innerHTML = '<span style="color:var(--muted);font-family:\'Space Mono\',monospace;font-size:0.8rem;">Waiting for speech…</span>';
   document.getElementById('total-count').textContent = '0';
   document.getElementById('no-speech-notice').style.display = 'none';
@@ -550,7 +536,6 @@ async function startSession() {
   buildFillerGrid();
   showScreen('screen-active');
 
-  // Show PDF panel if a PDF was loaded
   if (pdfDoc) {
     const panel = document.getElementById('pdf-viewer-panel');
     panel.style.display = 'block';
@@ -611,7 +596,6 @@ function showResults() {
   const elapsed = Math.max(sessionElapsed, 1);
   const rate = Math.round((totalFillers / elapsed) * 60);
 
-  // Score coloring
   const totalEl = document.getElementById('r-total');
   totalEl.textContent = totalFillers;
   totalEl.className = 'stat-value ' + (totalFillers <= 5 ? 'good' : totalFillers <= 15 ? 'warn' : 'bad');
@@ -622,7 +606,6 @@ function showResults() {
 
   document.getElementById('r-total-sub').textContent = totalFillers <= 5 ? '🟢 Excellent' : totalFillers <= 15 ? '🟡 Needs work' : '🔴 High usage';
 
-  // Top word
   const sorted = Object.entries(fillerCounts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
   const topEl = document.getElementById('r-top');
   const topSubEl = document.getElementById('r-top-sub');
@@ -636,12 +619,10 @@ function showResults() {
     topSubEl.textContent = 'No fillers detected 🎉';
   }
 
-  // Subtitle
   const elapsed_s = Math.min(elapsed, DURATION);
   document.getElementById('result-subtitle').textContent =
     `You spoke for ${elapsed_s} second${elapsed_s !== 1 ? 's' : ''}. ${totalFillers === 0 ? "Perfect run — zero fillers!" : `${totalFillers} filler word${totalFillers !== 1 ? 's' : ''} detected.`}`;
 
-  // Bar chart
   const chart = document.getElementById('bar-chart');
   chart.innerHTML = '';
   const max = sorted.length ? sorted[0][1] : 1;
@@ -656,7 +637,6 @@ function showResults() {
       <span class="bar-num">${count}</span>`;
     chart.appendChild(row);
   });
-  // Animate bars
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       document.querySelectorAll('.bar-fill').forEach(b => {
@@ -665,7 +645,6 @@ function showResults() {
     });
   });
 
-  // Video playback
   if (recordedChunks.length > 0) {
     setTimeout(() => {
       const blob = new Blob(recordedChunks, { type: 'video/webm' });
@@ -676,11 +655,9 @@ function showResults() {
     }, 300);
   }
 
-  // Transcript
   document.getElementById('result-transcript-text').innerHTML =
     transcriptHTML || '<span style="color:var(--muted)">No speech was captured.</span>';
 
-  // Tips
   const tips = generateTips(totalFillers, rate, sorted);
   const tc = document.getElementById('tips-container');
   tc.innerHTML = '';
@@ -691,11 +668,9 @@ function showResults() {
     tc.appendChild(div);
   });
 
-  // Calculate WPM
   const wordsCount = tokenize(fullTranscript).length;
   const computedWpm = Math.round((wordsCount / elapsed) * 60);
 
-  // Save session to database
   const tipsText = tips.map(t => `${t.icon} ${t.text}`).join('\n');
   fetch('/api/sessions', {
     method: 'POST',
@@ -710,11 +685,7 @@ function showResults() {
     })
   }).then(res => {
     if (res.ok) {
-      console.log('Session saved successfully');
-      // If we have a loadHistory function, we can refresh the history here
-      if (typeof loadHistory === 'function') {
-        loadHistory();
-      }
+      if (typeof loadHistory === 'function') loadHistory();
     }
   }).catch(err => console.error('Error saving session:', err));
 }
@@ -744,7 +715,3 @@ function generateTips(total, rate, sorted) {
   }
   return tips;
 }
-
-app.get('/fluency', (req, res) => {
-  res.sendFile(path.join(__dirname, 'speech-trainer.html'));
-});
