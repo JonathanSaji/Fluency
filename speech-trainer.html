@@ -1,431 +1,471 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fluency — Presentation Trainer</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<style>
-  /* ── AUTH OVERLAY ── */
-  .fluency-login-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(10, 10, 15, 0.92);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 9999;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fluency — Presentation Trainer</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    /* ── AUTH OVERLAY ── */
+    .fluency-login-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 15, 0.92);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
 
-  .fluency-login-card {
-    width: 100%;
-    max-width: 420px;
-    background: #12121a;
-    border: 1px solid rgba(240, 165, 0, 0.4);
-    border-radius: 10px;
-    padding: 2rem;
-    color: #e8e6f0;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
-  }
+    .fluency-login-card {
+      width: 100%;
+      max-width: 420px;
+      background: #12121a;
+      border: 1px solid rgba(255, 60, 56, 1);
+      border-radius: 10px;
+      padding: 2rem;
+      color: #e8e6f0;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    }
 
-  .fluency-login-brand {
-    font-size: 1.3rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    color: #f0a500;
-    margin-bottom: 0.25rem;
-  }
-  .fluency-login-brand span { color: #e8e6f0; }
+    .fluency-login-brand {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #FF3C38;
+      margin-bottom: 0.25rem;
+    }
 
-  .fluency-login-subtitle {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: #5a5870;
-    letter-spacing: 0.06em;
-    margin-bottom: 1.5rem;
-  }
+    .fluency-login-brand span {
+      color: #e8e6f0;
+    }
 
-  .fluency-login-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    color: #5a5870;
-    text-transform: uppercase;
-    display: block;
-    margin-bottom: 0.35rem;
-  }
+    .fluency-login-subtitle {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: #5a5870;
+      letter-spacing: 0.06em;
+      margin-bottom: 1.5rem;
+    }
 
-  .fluency-login-input {
-    width: 100%;
-    background: #0a0a0f;
-    border: 1px solid #1e1e2e;
-    border-radius: 4px;
-    color: #e8e6f0;
-    padding: 0.6rem 0.75rem;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.85rem;
-    margin-bottom: 1rem;
-    outline: none;
-    box-sizing: border-box;
-    transition: border-color 0.2s;
-  }
-  .fluency-login-input:focus { border-color: #f0a500; }
+    .fluency-login-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: #5a5870;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.35rem;
+    }
 
-  .fluency-login-btn {
-    width: 100%;
-    padding: 0.75rem;
-    font-family: 'Syne', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    background: #f0a500;
-    color: #0a0a0f;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-    box-shadow: 0 0 24px rgba(240,165,0,0.25);
-    margin-top: 0.25rem;
-  }
-  .fluency-login-btn:hover { transform: translateY(-1px); box-shadow: 0 0 40px rgba(240,165,0,0.4); }
+    .fluency-login-input {
+      width: 100%;
+      background: #0a0a0f;
+      border: 1px solid #1e1e2e;
+      border-radius: 4px;
+      color: #e8e6f0;
+      padding: 0.6rem 0.75rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
 
-  .fluency-login-error {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: #ff4d6d;
-    min-height: 1rem;
-    margin-top: -0.5rem;
-    margin-bottom: 0.75rem;
-  }
+    .fluency-login-input:focus {
+      border-color: #FF3C38;
+    }
 
-  .fluency-login-toggle {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    color: #5a5870;
-    text-align: center;
-    margin-top: 1rem;
-  }
-  .fluency-login-toggle button {
-    background: none;
-    border: none;
-    color: #f0a500;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.7rem;
-    cursor: pointer;
-    text-decoration: underline;
-    padding: 0;
-  }
+    .fluency-login-btn {
+      width: 100%;
+      padding: 0.75rem;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: #FF3C38;
+      color: #0a0a0f;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 0 24px rgba(255, 60, 56, 1);
+      margin-top: 0.25rem;
+    }
 
-  /* user pill in header */
-  .fluency-user-pill {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.65rem;
-    color: #5a5870;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-left: auto;
-  }
-  .fluency-logout-btn {
-    background: none;
-    border: 1px solid #1e1e2e;
-    color: #5a5870;
-    font-family: 'Space Mono', monospace;
-    font-size: 0.6rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: color 0.2s, border-color 0.2s;
-    letter-spacing: 0.04em;
-  }
-  .fluency-logout-btn:hover { color: #ff4d6d; border-color: #ff4d6d; }
-</style>
-<script src="script.js" defer></script>
+    .fluency-login-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 40px rgba(255, 60, 56, 0.4);
+    }
+
+    .fluency-login-error {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: #FF3C38;
+      min-height: 1rem;
+      margin-top: -0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .fluency-login-toggle {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: #5a5870;
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .fluency-login-toggle button {
+      background: none;
+      border: none;
+      color: #FF3C38;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+    }
+
+    /* user pill in header */
+    .fluency-user-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: #5a5870;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+
+    .fluency-logout-btn {
+      background: none;
+      border: 1px solid #1e1e2e;
+      color: #5a5870;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    .fluency-logout-btn:hover {
+      color: #FF3C38;
+      border-color: #FF3C38;
+    }
+  </style>
+  <script src="script.js" defer></script>
 </head>
+
 <body>
 
-<!-- ── AUTH OVERLAY ── -->
-<div class="fluency-login-overlay" id="fluency-login-overlay">
-  <div class="fluency-login-card">
-    <div class="fluency-login-brand">Flue<span>cy</span></div>
-    <div class="fluency-login-subtitle">SIGN IN WITH YOUR SUBSYNC ACCOUNT</div>
+  <!-- ── AUTH OVERLAY ── -->
+  <div class="fluency-login-overlay" id="fluency-login-overlay">
+    <div class="fluency-login-card">
+      <div class="fluency-login-brand">Flue<span>cy</span></div>
+      <div class="fluency-login-subtitle">SIGN IN WITH YOUR SUBSYNC ACCOUNT</div>
 
-    <!-- Login panel -->
-    <div id="fluency-login-panel">
-      <label class="fluency-login-label" for="fl-identifier">Username or Email</label>
-      <input class="fluency-login-input" type="text" id="fl-identifier" autocomplete="username" placeholder="username or email" />
+      <!-- Login panel -->
+      <div id="fluency-login-panel">
+        <label class="fluency-login-label" for="fl-identifier">Username or Email</label>
+        <input class="fluency-login-input" type="text" id="fl-identifier" autocomplete="username"
+          placeholder="username or email" />
 
-      <label class="fluency-login-label" for="fl-password">Password</label>
-      <input class="fluency-login-input" type="password" id="fl-password" autocomplete="current-password" placeholder="password" />
+        <label class="fluency-login-label" for="fl-password">Password</label>
+        <input class="fluency-login-input" type="password" id="fl-password" autocomplete="current-password"
+          placeholder="password" />
 
-      <div class="fluency-login-error" id="fl-login-error"></div>
+        <div class="fluency-login-error" id="fl-login-error"></div>
 
-      <button class="fluency-login-btn" id="fl-login-btn">▶ SIGN IN</button>
+        <button class="fluency-login-btn" id="fl-login-btn">▶ SIGN IN</button>
 
-      <div class="fluency-login-toggle">
-        No account? <button id="fl-show-signup">Create one</button>
-      </div>
-    </div>
-
-    <!-- Signup panel -->
-    <div id="fluency-signup-panel" style="display:none">
-      <label class="fluency-login-label" for="fl-su-username">Username</label>
-      <input class="fluency-login-input" type="text" id="fl-su-username" autocomplete="username" placeholder="choose a username" />
-
-      <label class="fluency-login-label" for="fl-su-email">Email</label>
-      <input class="fluency-login-input" type="email" id="fl-su-email" autocomplete="email" placeholder="you@example.com" />
-
-      <label class="fluency-login-label" for="fl-su-password">Password</label>
-      <input class="fluency-login-input" type="password" id="fl-su-password" autocomplete="new-password" placeholder="create a password" />
-
-      <div class="fluency-login-error" id="fl-signup-error"></div>
-
-      <button class="fluency-login-btn" id="fl-signup-btn">CREATE ACCOUNT</button>
-
-      <div class="fluency-login-toggle">
-        Have an account? <button id="fl-show-login">Sign in</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<header>
-  <div class="logo">Flue<span>cy</span></div>
-  <div class="badge">PRESENT IN STYLE</div>
-  <div class="fluency-user-pill" id="fluency-user-pill" style="display:none">
-    <span id="fluency-username-label"></span>
-    <button class="fluency-logout-btn" id="fluency-logout-btn">SIGN OUT</button>
-  </div>
-</header>
-
-<main id="app">
-
-  <!-- ── IDLE ── -->
-  <div id="screen-idle" class="visible">
-    <div class="hero">
-      <h1>Stop saying <em>"um"</em>.<br>Start speaking clearly.</h1>
-      <p>Set your time and speak naturally. We'll count every filler word and show you exactly where to improve.</p>
-      <div class="filler-chips">
-        <span class="chip">um</span><span class="chip">uh</span><span class="chip">like</span>
-        <span class="chip">you know</span><span class="chip">basically</span><span class="chip">literally</span>
-        <span class="chip">so</span><span class="chip">right</span><span class="chip">okay</span>
-        <span class="chip">actually</span><span class="chip">kind of</span><span class="chip">sort of</span>
-      </div>
-      <!-- PDF Upload -->
-      <div class="pdf-upload-area" id="pdf-upload-area">
-        <input type="file" id="pdf-file-input" accept=".pdf" style="display:none" onchange="handlePDFUpload(this.files[0])">
-        <div class="pdf-upload-box" id="pdf-upload-box"
-             onclick="document.getElementById('pdf-file-input').click()"
-             ondragover="event.preventDefault();this.classList.add('drag-over')"
-             ondragleave="this.classList.remove('drag-over')"
-             ondrop="event.preventDefault();this.classList.remove('drag-over');handlePDFUpload(event.dataTransfer.files[0])">
-          <span class="pdf-upload-icon">📄</span>
-          <span class="pdf-upload-text">Upload Reference PDF <span class="optional">(optional)</span></span>
-          <span class="pdf-upload-hint">Your notes will be visible while you record</span>
-        </div>
-        <div class="pdf-loaded-indicator" id="pdf-loaded-indicator" style="display:none">
-          <span class="pdf-loaded-icon">✓</span>
-          <span id="pdf-loaded-name">document.pdf</span>
-          <button class="pdf-remove-btn" onclick="removePDF()">✕ Remove</button>
+        <div class="fluency-login-toggle">
+          No account? <button id="fl-show-signup">Create one</button>
         </div>
       </div>
 
-      <div class="time-selector">
-        <label for="duration-select">SESSION TIME:</label>
-        <select id="duration-select">
-          <option value="30">30 Seconds</option>
-          <option value="60" selected>1 Minute</option>
-          <option value="120">2 Minutes</option>
-          <option value="300">5 Minutes</option>
-        </select>
-      </div>
-      
-      <button class="start-btn" onclick="startSession()">▶ START SESSION</button>
-      <p class="perms-note">Requires microphone access · Camera optional</p>
+      <!-- Signup panel -->
+      <div id="fluency-signup-panel" style="display:none">
+        <label class="fluency-login-label" for="fl-su-username">Username</label>
+        <input class="fluency-login-input" type="text" id="fl-su-username" autocomplete="username"
+          placeholder="choose a username" />
 
-      <!-- History Section -->
-      <div class="history-panel anim" id="history-panel" style="display:none; max-width: 600px; margin: 2.5rem auto 0; text-align: left;">
-        <h3 style="font-family: 'Space Mono', monospace; font-size: 0.85rem; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-          <span>📜 PAST SESSIONS</span>
-          <button id="clear-history-btn" style="background: none; border: none; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.65rem; cursor: pointer; text-decoration: underline;" onclick="clearHistory()">Clear All</button>
-        </h3>
-        <div id="history-list" style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; padding-right: 0.25rem;">
-          <!-- Loaded via JS -->
+        <label class="fluency-login-label" for="fl-su-email">Email</label>
+        <input class="fluency-login-input" type="email" id="fl-su-email" autocomplete="email"
+          placeholder="you@example.com" />
+
+        <label class="fluency-login-label" for="fl-su-password">Password</label>
+        <input class="fluency-login-input" type="password" id="fl-su-password" autocomplete="new-password"
+          placeholder="create a password" />
+
+        <div class="fluency-login-error" id="fl-signup-error"></div>
+
+        <button class="fluency-login-btn" id="fl-signup-btn">CREATE ACCOUNT</button>
+
+        <div class="fluency-login-toggle">
+          Have an account? <button id="fl-show-login">Sign in</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ── ACTIVE ── -->
-  <div id="screen-active">
-    <!-- Timer -->
-    <div class="panel">
-      <div class="panel-label"><div class="dot live"></div> RECORDING</div>
-      <div class="timer-block">
-        <div id="timer-display">1:00</div>
-        <div class="timer-bar-wrap">
-          <div id="timer-bar"></div>
+  <header>
+    <div class="logo">Flue<span>cy</span></div>
+    <div class="badge">PRESENT IN STYLE</div>
+    <div class="fluency-user-pill" id="fluency-user-pill" style="display:none">
+      <span id="fluency-username-label"></span>
+      <button class="fluency-logout-btn" id="fluency-logout-btn">SIGN OUT</button>
+    </div>
+  </header>
+
+  <main id="app">
+
+    <!-- ── IDLE ── -->
+    <div id="screen-idle" class="visible">
+      <div class="hero">
+        <h1>Stop saying <em>"um"</em>.<br>Start speaking clearly.</h1>
+        <p>Set your time and speak naturally. We'll count every filler word and show you exactly where to improve.</p>
+        <div class="filler-chips">
+          <span class="chip">um</span><span class="chip">uh</span><span class="chip">like</span>
+          <span class="chip">you know</span><span class="chip">basically</span><span class="chip">literally</span>
+          <span class="chip">so</span><span class="chip">right</span><span class="chip">okay</span>
+          <span class="chip">actually</span><span class="chip">kind of</span><span class="chip">sort of</span>
+        </div>
+        <!-- PDF Upload -->
+        <div class="pdf-upload-area" id="pdf-upload-area">
+          <input type="file" id="pdf-file-input" accept=".pdf" style="display:none"
+            onchange="handlePDFUpload(this.files[0])">
+          <div class="pdf-upload-box" id="pdf-upload-box" onclick="document.getElementById('pdf-file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag-over')"
+            ondragleave="this.classList.remove('drag-over')"
+            ondrop="event.preventDefault();this.classList.remove('drag-over');handlePDFUpload(event.dataTransfer.files[0])">
+            <span class="pdf-upload-icon">📄</span>
+            <span class="pdf-upload-text">Upload Reference PDF <span class="optional">(optional)</span></span>
+            <span class="pdf-upload-hint">Your notes will be visible while you record</span>
+          </div>
+          <div class="pdf-loaded-indicator" id="pdf-loaded-indicator" style="display:none">
+            <span class="pdf-loaded-icon">✓</span>
+            <span id="pdf-loaded-name">document.pdf</span>
+            <button class="pdf-remove-btn" onclick="removePDF()">✕ Remove</button>
+          </div>
+        </div>
+
+        <div class="time-selector">
+          <label for="duration-select">SESSION TIME:</label>
+          <select id="duration-select">
+            <option value="30">30 Seconds</option>
+            <option value="60" selected>1 Minute</option>
+            <option value="120">2 Minutes</option>
+            <option value="300">5 Minutes</option>
+          </select>
+        </div>
+
+        <button class="start-btn" onclick="startSession()">▶ START SESSION</button>
+        <p class="perms-note">Requires microphone access · Camera optional</p>
+
+        <!-- History Section -->
+        <div class="history-panel anim" id="history-panel"
+          style="display:none; max-width: 600px; margin: 2.5rem auto 0; text-align: left;">
+          <h3
+            style="font-family: 'Space Mono', monospace; font-size: 0.85rem; color: var(--accent); letter-spacing: 0.1em; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+            <span>📜 PAST SESSIONS</span>
+            <button id="clear-history-btn"
+              style="background: none; border: none; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.65rem; cursor: pointer; text-decoration: underline;"
+              onclick="clearHistory()">Clear All</button>
+          </h3>
+          <div id="history-list"
+            style="display: flex; flex-direction: column; gap: 0.75rem; max-height: 350px; overflow-y: auto; padding-right: 0.25rem;">
+            <!-- Loaded via JS -->
+          </div>
         </div>
       </div>
-      <div style="margin-top:1rem;">
-        <div class="panel-label"><div class="dot green"></div> TOTAL FILLERS</div>
-        <div class="total-block">
-          <span class="total-label">COUNT</span>
-          <span id="total-count">0</span>
+    </div>
+
+    <!-- ── ACTIVE ── -->
+    <div id="screen-active">
+      <!-- Timer -->
+      <div class="panel">
+        <div class="panel-label">
+          <div class="dot live"></div> RECORDING
+        </div>
+        <div class="timer-block">
+          <div id="timer-display">1:00</div>
+          <div class="timer-bar-wrap">
+            <div id="timer-bar"></div>
+          </div>
+        </div>
+        <div style="margin-top:1rem;">
+          <div class="panel-label">
+            <div class="dot green"></div> TOTAL FILLERS
+          </div>
+          <div class="total-block">
+            <span class="total-label">COUNT</span>
+            <span id="total-count">0</span>
+          </div>
+        </div>
+        <p id="no-speech-notice">⚠ No speech detected — check microphone permissions</p>
+      </div>
+
+      <!-- Filler breakdown -->
+      <div class="panel">
+        <div class="panel-label">FILLER BREAKDOWN</div>
+        <div class="filler-grid" id="filler-grid"></div>
+      </div>
+
+      <!-- Camera -->
+      <div class="panel camera-panel">
+        <div class="panel-label">
+          <div class="dot live" id="cam-dot" style="background:var(--muted)"></div> CAMERA
+        </div>
+        <video id="video-preview" autoplay muted playsinline></video>
+        <div class="camera-off-msg" id="cam-off-msg" style="display:none">Camera unavailable or permission denied</div>
+      </div>
+
+      <!-- PDF Viewer -->
+      <div class="panel pdf-viewer-panel" id="pdf-viewer-panel" style="display:none">
+        <div class="pdf-panel-header">
+          <div class="panel-label" style="margin-bottom:0">📄 REFERENCE PDF</div>
+          <div class="pdf-mode-btns">
+            <button class="pdf-mode-btn active" id="mode-full" onclick="setPDFMode('full')">FULL</button>
+            <button class="pdf-mode-btn" id="mode-dim" onclick="setPDFMode('dim')">DIM</button>
+            <button class="pdf-mode-btn" id="mode-hidden" onclick="setPDFMode('hidden')">HIDDEN</button>
+          </div>
+        </div>
+        <div class="pdf-hidden-notice" id="pdf-hidden-notice" style="display:none">
+          <span>PDF hidden — click FULL or DIM to view</span>
+        </div>
+        <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
+          <canvas id="pdf-canvas"></canvas>
+        </div>
+        <div class="pdf-nav" id="pdf-nav">
+          <button class="pdf-nav-btn" id="pdf-prev" onclick="prevPDFPage()">← PREV</button>
+          <span class="pdf-page-info" id="pdf-page-info">1 / 1</span>
+          <button class="pdf-nav-btn" id="pdf-next" onclick="nextPDFPage()">NEXT →</button>
         </div>
       </div>
-      <p id="no-speech-notice">⚠ No speech detected — check microphone permissions</p>
-    </div>
 
-    <!-- Filler breakdown -->
-    <div class="panel">
-      <div class="panel-label">FILLER BREAKDOWN</div>
-      <div class="filler-grid" id="filler-grid"></div>
-    </div>
-
-    <!-- Camera -->
-    <div class="panel camera-panel">
-      <div class="panel-label"><div class="dot live" id="cam-dot" style="background:var(--muted)"></div> CAMERA</div>
-      <video id="video-preview" autoplay muted playsinline></video>
-      <div class="camera-off-msg" id="cam-off-msg" style="display:none">Camera unavailable or permission denied</div>
-    </div>
-
-    <!-- PDF Viewer -->
-    <div class="panel pdf-viewer-panel" id="pdf-viewer-panel" style="display:none">
-      <div class="pdf-panel-header">
-        <div class="panel-label" style="margin-bottom:0">📄 REFERENCE PDF</div>
-        <div class="pdf-mode-btns">
-          <button class="pdf-mode-btn active" id="mode-full"   onclick="setPDFMode('full')">FULL</button>
-          <button class="pdf-mode-btn"         id="mode-dim"   onclick="setPDFMode('dim')">DIM</button>
-          <button class="pdf-mode-btn"         id="mode-hidden" onclick="setPDFMode('hidden')">HIDDEN</button>
+      <!-- Transcript -->
+      <div class="panel transcript-panel">
+        <div class="panel-label">LIVE TRANSCRIPT</div>
+        <div id="transcript"><span
+            style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.8rem;">Waiting for speech…</span>
         </div>
       </div>
-      <div class="pdf-hidden-notice" id="pdf-hidden-notice" style="display:none">
-        <span>PDF hidden — click FULL or DIM to view</span>
-      </div>
-      <div class="pdf-canvas-wrap" id="pdf-canvas-wrap">
-        <canvas id="pdf-canvas"></canvas>
-      </div>
-      <div class="pdf-nav" id="pdf-nav">
-        <button class="pdf-nav-btn" id="pdf-prev" onclick="prevPDFPage()">← PREV</button>
-        <span class="pdf-page-info" id="pdf-page-info">1 / 1</span>
-        <button class="pdf-nav-btn" id="pdf-next" onclick="nextPDFPage()">NEXT →</button>
+
+      <!-- Controls -->
+      <div class="controls">
+        <button class="ctrl-btn stop" onclick="stopSession()">■ STOP & SEE RESULTS</button>
+        <button class="ctrl-btn secondary" onclick="cancelSession()">✕ Cancel</button>
       </div>
     </div>
 
-    <!-- Transcript -->
-    <div class="panel transcript-panel">
-      <div class="panel-label">LIVE TRANSCRIPT</div>
-      <div id="transcript"><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.8rem;">Waiting for speech…</span></div>
-    </div>
-
-    <!-- Controls -->
-    <div class="controls">
-      <button class="ctrl-btn stop" onclick="stopSession()">■ STOP & SEE RESULTS</button>
-      <button class="ctrl-btn secondary" onclick="cancelSession()">✕ Cancel</button>
-    </div>
-  </div>
-
-  <!-- ── RESULTS ── -->
-  <div id="screen-results">
-    <div class="results-header anim">
-      <h2>Your Results</h2>
-      <p id="result-subtitle">Here's how you did in your 60-second session.</p>
-    </div>
-
-    <div class="score-card anim">
-      <div class="stat">
-        <div class="stat-label">Total Fillers</div>
-        <div class="stat-value" id="r-total">0</div>
-        <div class="stat-sub" id="r-total-sub"></div>
+    <!-- ── RESULTS ── -->
+    <div id="screen-results">
+      <div class="results-header anim">
+        <h2>Your Results</h2>
+        <p id="result-subtitle">Here's how you did in your 60-second session.</p>
       </div>
-      <div class="stat">
-        <div class="stat-label">Per Minute Rate</div>
-        <div class="stat-value" id="r-rate">0</div>
-        <div class="stat-sub">fillers / minute</div>
+
+      <div class="score-card anim">
+        <div class="stat">
+          <div class="stat-label">Total Fillers</div>
+          <div class="stat-value" id="r-total">0</div>
+          <div class="stat-sub" id="r-total-sub"></div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Per Minute Rate</div>
+          <div class="stat-value" id="r-rate">0</div>
+          <div class="stat-sub">fillers / minute</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Most Used</div>
+          <div class="stat-value" id="r-top" style="font-size:1.4rem;margin-top:0.5rem;">—</div>
+          <div class="stat-sub" id="r-top-sub"></div>
+        </div>
       </div>
-      <div class="stat">
-        <div class="stat-label">Most Used</div>
-        <div class="stat-value" id="r-top" style="font-size:1.4rem;margin-top:0.5rem;">—</div>
-        <div class="stat-sub" id="r-top-sub"></div>
+
+      <div class="breakdown anim">
+        <h3>BREAKDOWN BY WORD</h3>
+        <div id="bar-chart"></div>
+      </div>
+
+      <div class="playback-panel anim" id="playback-panel" style="display:none">
+        <video id="playback-video" controls playsinline></video>
+        <div class="playback-label">
+          <div class="dot" style="background:var(--green)"></div> YOUR RECORDING — WATCH YOUR BODY LANGUAGE
+        </div>
+      </div>
+
+      <div class="feedback-panel anim">
+        <h3>COACHING TIPS</h3>
+        <div id="tips-container"></div>
+      </div>
+
+      <div class="result-transcript anim">
+        <h3>FULL TRANSCRIPT</h3>
+        <div id="result-transcript-text">No transcript captured.</div>
+      </div>
+
+      <div class="results-actions anim">
+        <button class="retry-btn" onclick="resetToIdle()">↺ Try Again</button>
       </div>
     </div>
 
-    <div class="breakdown anim">
-      <h3>BREAKDOWN BY WORD</h3>
-      <div id="bar-chart"></div>
-    </div>
+  </main>
 
-    <div class="playback-panel anim" id="playback-panel" style="display:none">
-      <video id="playback-video" controls playsinline></video>
-      <div class="playback-label"><div class="dot" style="background:var(--green)"></div> YOUR RECORDING — WATCH YOUR BODY LANGUAGE</div>
-    </div>
+  <script>
+    // ── FLUENCY AUTH ──
+    (function () {
+      const overlay = document.getElementById('fluency-login-overlay');
+      const loginPanel = document.getElementById('fluency-login-panel');
+      const signupPanel = document.getElementById('fluency-signup-panel');
+      const loginError = document.getElementById('fl-login-error');
+      const signupError = document.getElementById('fl-signup-error');
+      const userPill = document.getElementById('fluency-user-pill');
+      const usernameLabel = document.getElementById('fluency-username-label');
 
-    <div class="feedback-panel anim">
-      <h3>COACHING TIPS</h3>
-      <div id="tips-container"></div>
-    </div>
+      function showOverlay() { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+      function hideOverlay() { overlay.style.display = 'none'; document.body.style.overflow = ''; }
+      function showLogin() { loginPanel.style.display = ''; signupPanel.style.display = 'none'; loginError.textContent = ''; }
+      function showSignup() { signupPanel.style.display = ''; loginPanel.style.display = 'none'; signupError.textContent = ''; }
 
-    <div class="result-transcript anim">
-      <h3>FULL TRANSCRIPT</h3>
-      <div id="result-transcript-text">No transcript captured.</div>
-    </div>
+      async function loadHistory() {
+        const hp = document.getElementById('history-panel');
+        const hl = document.getElementById('history-list');
+        if (!hp || !hl) return;
 
-    <div class="results-actions anim">
-      <button class="retry-btn" onclick="resetToIdle()">↺ Try Again</button>
-    </div>
-  </div>
+        try {
+          const res = await fetch('/api/sessions');
+          if (!res.ok) {
+            hp.style.display = 'none';
+            return;
+          }
+          const data = await res.json();
+          if (!data.sessions || data.sessions.length === 0) {
+            hl.innerHTML = '<div style="color: var(--muted); font-size: 0.75rem; text-align: center; font-family: \'Space Mono\', monospace; padding: 1rem;">No history sessions yet. Start a session above!</div>';
+            hp.style.display = 'block';
+            return;
+          }
 
-</main>
+          hl.innerHTML = data.sessions.map((s, idx) => {
+            const dateStr = new Date(s.created_at).toLocaleString();
+            const breakdown = s.filler_words_breakdown || {};
+            const sorted = Object.entries(breakdown).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+            const topFiller = sorted.length ? `(Top: ${sorted[0][0]} x${sorted[0][1]})` : '(No fillers 🎉)';
+            const transcriptPreview = s.transcript ? s.transcript.slice(0, 100) + (s.transcript.length > 100 ? '...' : '') : 'No transcript';
+            const formattedTips = s.coaching_tips ? s.coaching_tips.split('\n').map(t => `<div style="font-size: 0.75rem; margin-top: 0.25rem;">${t}</div>`).join('') : '';
 
-<script>
-// ── FLUENCY AUTH ──
-(function() {
-  const overlay       = document.getElementById('fluency-login-overlay');
-  const loginPanel    = document.getElementById('fluency-login-panel');
-  const signupPanel   = document.getElementById('fluency-signup-panel');
-  const loginError    = document.getElementById('fl-login-error');
-  const signupError   = document.getElementById('fl-signup-error');
-  const userPill      = document.getElementById('fluency-user-pill');
-  const usernameLabel = document.getElementById('fluency-username-label');
-
-  function showOverlay() { overlay.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
-  function hideOverlay() { overlay.style.display = 'none'; document.body.style.overflow = ''; }
-  function showLogin()   { loginPanel.style.display = ''; signupPanel.style.display = 'none'; loginError.textContent = ''; }
-  function showSignup()  { signupPanel.style.display = ''; loginPanel.style.display = 'none'; signupError.textContent = ''; }
-
-  async function loadHistory() {
-    const hp = document.getElementById('history-panel');
-    const hl = document.getElementById('history-list');
-    if (!hp || !hl) return;
-
-    try {
-      const res = await fetch('/api/sessions');
-      if (!res.ok) {
-        hp.style.display = 'none';
-        return;
-      }
-      const data = await res.json();
-      if (!data.sessions || data.sessions.length === 0) {
-        hl.innerHTML = '<div style="color: var(--muted); font-size: 0.75rem; text-align: center; font-family: \'Space Mono\', monospace; padding: 1rem;">No history sessions yet. Start a session above!</div>';
-        hp.style.display = 'block';
-        return;
-      }
-
-      hl.innerHTML = data.sessions.map((s, idx) => {
-        const dateStr = new Date(s.created_at).toLocaleString();
-        const breakdown = s.filler_words_breakdown || {};
-        const sorted = Object.entries(breakdown).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-        const topFiller = sorted.length ? `(Top: ${sorted[0][0]} x${sorted[0][1]})` : '(No fillers 🎉)';
-        const transcriptPreview = s.transcript ? s.transcript.slice(0, 100) + (s.transcript.length > 100 ? '...' : '') : 'No transcript';
-        const formattedTips = s.coaching_tips ? s.coaching_tips.split('\n').map(t => `<div style="font-size: 0.75rem; margin-top: 0.25rem;">${t}</div>`).join('') : '';
-
-        return `
+            return `
           <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; font-family: 'Space Mono', monospace;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--border); padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
               <span style="font-size: 0.7rem; color: var(--muted);">${dateStr}</span>
@@ -449,143 +489,144 @@
             <button onclick="document.getElementById('details-${s.id}').style.display = document.getElementById('details-${s.id}').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent === 'Show Details' ? 'Hide Details' : 'Show Details';" style="background: none; border: 1px solid var(--border); border-radius: 3px; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.65rem; cursor: pointer; padding: 0.2rem 0.5rem; margin-top: 0.5rem; display: block; width: 100%; text-align: center;">Show Details</button>
           </div>
         `;
-      }).join('');
+          }).join('');
 
-      hp.style.display = 'block';
-    } catch (err) {
-      console.error('Failed to load history:', err);
-    }
-  }
+          hp.style.display = 'block';
+        } catch (err) {
+          console.error('Failed to load history:', err);
+        }
+      }
 
-  async function clearHistory() {
-    if (!confirm('Are you sure you want to clear your speech training history?')) return;
-    try {
-      const res = await fetch('/api/sessions', { method: 'DELETE' });
-      if (res.ok) {
+      async function clearHistory() {
+        if (!confirm('Are you sure you want to clear your speech training history?')) return;
+        try {
+          const res = await fetch('/api/sessions', { method: 'DELETE' });
+          if (res.ok) {
+            loadHistory();
+          }
+        } catch (err) {
+          console.error('Failed to clear history:', err);
+        }
+      }
+
+      window.loadHistory = loadHistory;
+      window.clearHistory = clearHistory;
+
+      function setUser(username) {
+        usernameLabel.textContent = username;
+        userPill.style.display = 'flex';
+        hideOverlay();
         loadHistory();
       }
-    } catch (err) {
-      console.error('Failed to clear history:', err);
-    }
-  }
 
-  window.loadHistory = loadHistory;
-  window.clearHistory = clearHistory;
-
-  function setUser(username) {
-    usernameLabel.textContent = username;
-    userPill.style.display = 'flex';
-    hideOverlay();
-    loadHistory();
-  }
-
-  function clearUser() {
-    userPill.style.display = 'none';
-    showOverlay();
-    showLogin();
-    const hp = document.getElementById('history-panel');
-    if (hp) hp.style.display = 'none';
-  }
-
-  // Check if already logged in
-  async function checkSession() {
-    try {
-      const res = await fetch('/api/session');
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.username);
-        return true;
+      function clearUser() {
+        userPill.style.display = 'none';
+        showOverlay();
+        showLogin();
+        const hp = document.getElementById('history-panel');
+        if (hp) hp.style.display = 'none';
       }
-    } catch (err) {
-      console.error('Session check error:', err);
-    }
-    return false;
-  }
 
-  document.getElementById('fl-show-signup').addEventListener('click', showSignup);
-  document.getElementById('fl-show-login').addEventListener('click', showLogin);
+      // Check if already logged in
+      async function checkSession() {
+        try {
+          const res = await fetch('/api/session');
+          if (res.ok) {
+            const data = await res.json();
+            setUser(data.username);
+            return true;
+          }
+        } catch (err) {
+          console.error('Session check error:', err);
+        }
+        return false;
+      }
 
-  document.getElementById('fl-login-btn').addEventListener('click', async () => {
-    const identifier = document.getElementById('fl-identifier').value.trim();
-    const password   = document.getElementById('fl-password').value;
-    loginError.textContent = '';
+      document.getElementById('fl-show-signup').addEventListener('click', showSignup);
+      document.getElementById('fl-show-login').addEventListener('click', showLogin);
 
-    if (!identifier || !password) {
-      loginError.textContent = 'Please fill in all fields.';
-      return;
-    }
+      document.getElementById('fl-login-btn').addEventListener('click', async () => {
+        const identifier = document.getElementById('fl-identifier').value.trim();
+        const password = document.getElementById('fl-password').value;
+        loginError.textContent = '';
 
-    try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password })
+        if (!identifier || !password) {
+          loginError.textContent = 'Please fill in all fields.';
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier, password })
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            setUser(data.username);
+          } else {
+            loginError.textContent = data.error || 'Login failed';
+          }
+        } catch (err) {
+          console.error('Login error:', err);
+          loginError.textContent = 'Network error';
+        }
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data.username);
-      } else {
-        loginError.textContent = data.error || 'Login failed';
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      loginError.textContent = 'Network error';
-    }
-  });
-
-  document.getElementById('fl-password').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('fl-login-btn').click();
-  });
-
-  document.getElementById('fl-signup-btn').addEventListener('click', async () => {
-    const username = document.getElementById('fl-su-username').value.trim();
-    const email = document.getElementById('fl-su-email').value.trim();
-    const password = document.getElementById('fl-su-password').value;
-    signupError.textContent = '';
-
-    if (!username || !email || !password) {
-      signupError.textContent = 'Please fill in all fields.';
-      return;
-    }
-
-    try {
-      const res = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
+      document.getElementById('fl-password').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('fl-login-btn').click();
       });
 
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data.username);
-      } else {
-        signupError.textContent = data.error || 'Signup failed';
-      }
-    } catch (err) {
-      console.error('Signup error:', err);
-      signupError.textContent = 'Network error';
-    }
-  });
+      document.getElementById('fl-signup-btn').addEventListener('click', async () => {
+        const username = document.getElementById('fl-su-username').value.trim();
+        const email = document.getElementById('fl-su-email').value.trim();
+        const password = document.getElementById('fl-su-password').value;
+        signupError.textContent = '';
 
-  document.getElementById('fluency-logout-btn').addEventListener('click', async () => {
-    try {
-      await fetch('/api/logout', { method: 'POST' });
-    } catch (err) {
-      console.error('Logout error:', err);
-    }
-    clearUser();
-  });
+        if (!username || !email || !password) {
+          signupError.textContent = 'Please fill in all fields.';
+          return;
+        }
 
-  // Initialize: check session or show login
-  checkSession().then(authenticated => {
-    if (!authenticated) {
-      showOverlay();
-      showLogin();
-    }
-  });
-})();
-</script>
+        try {
+          const res = await fetch('/api/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            setUser(data.username);
+          } else {
+            signupError.textContent = data.error || 'Signup failed';
+          }
+        } catch (err) {
+          console.error('Signup error:', err);
+          signupError.textContent = 'Network error';
+        }
+      });
+
+      document.getElementById('fluency-logout-btn').addEventListener('click', async () => {
+        try {
+          await fetch('/api/logout', { method: 'POST' });
+        } catch (err) {
+          console.error('Logout error:', err);
+        }
+        clearUser();
+      });
+
+      // Initialize: check session or show login
+      checkSession().then(authenticated => {
+        if (!authenticated) {
+          showOverlay();
+          showLogin();
+        }
+      });
+    })();
+  </script>
 
 </body>
+
 </html>

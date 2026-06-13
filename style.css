@@ -2,12 +2,12 @@
     --bg: #0a0a0f;
     --surface: #12121a;
     --border: #1e1e2e;
-    --accent: #f0a500;
-    --accent2: #ff4d6d;
+    --accent: #FF3C38;
+    --accent2: #FF3C38;
     --text: #e8e6f0;
     --muted: #5a5870;
     --green: #3dffa0;
-    --red: #ff4d6d;
+    --red: #FF3C38;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -126,7 +126,7 @@
     border: 1px solid var(--border);
     border-radius: 100px;
     color: var(--accent);
-    background: rgba(240,165,0,0.07);
+    background: rgba(255,60,56,0.07);
   }
 
   .start-btn {
@@ -142,12 +142,12 @@
     border-radius: 4px;
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
-    box-shadow: 0 0 30px rgba(240,165,0,0.3);
+    box-shadow: 0 0 30px rgba(255,60,56,0.3);
   }
 
   .start-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 0 50px rgba(240,165,0,0.5);
+    box-shadow: 0 0 50px rgba(255,60,56,0.5);
   }
 
   .perms-note {
@@ -249,7 +249,7 @@
 
   .filler-item.hit {
     border-color: var(--accent2);
-    background: rgba(255,77,109,0.08);
+    background: rgba(255,60,56,0.08);
   }
 
   .filler-word {
@@ -342,7 +342,7 @@
   #transcript .filler-highlight {
     color: var(--accent2);
     font-weight: 700;
-    background: rgba(255,77,109,0.12);
+    background: rgba(255,60,56,0.12);
     padding: 0 2px;
     border-radius: 2px;
   }
@@ -612,13 +612,13 @@
     border-radius: 6px;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
-    background: rgba(240,165,0,0.03);
+    background: rgba(255,60,56,0.03);
   }
 
   .pdf-upload-box:hover,
   .pdf-upload-box.drag-over {
     border-color: var(--accent);
-    background: rgba(240,165,0,0.08);
+    background: rgba(255,60,56,0.08);
   }
 
   .pdf-upload-icon { font-size: 1.3rem; }
@@ -820,7 +820,7 @@
   }
 
   #duration-select {
-    background: rgba(240,165,0,0.03);
+    background: rgba(255,60,56,0.03);
     color: var(--text);
     border: 1px solid var(--border);
     padding: 0.5rem 1rem;
@@ -835,7 +835,7 @@
   #duration-select:hover,
   #duration-select:focus {
     border-color: var(--accent);
-    background: rgba(240,165,0,0.08);
+    background: rgba(255,60,56,0.08);
   }
 
   #duration-select option {
